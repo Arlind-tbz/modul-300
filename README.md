@@ -1,1 +1,1 @@
-# modul-300
+# Modul 300 - Plattformübergreifende Dienste in ein Netzwerk integrieren
