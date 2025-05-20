@@ -11,10 +11,24 @@
 
 ## Tagesziele
 
+- Sich für ein Projekt eignen
+- Potentiel schon Anfangen
+  - Azure Lab erstellen
+
 ## Erreichte Tagesziele
+
+- Sich für ein Projekt eignen
+- Potentiel schon Anfangen
+  - Azure Lab erstellen
 
 ## Probleme & Herausforderungen
 
+Diese Woche hatte ich keine Probleme. Ich konnte Problemlos meine Dokumentation weiterführen und konnte einen Account in Azure erstellen.
+
 ## Genutzte & neu entdeckte Ressourcen
 
+- Terraform (Azure)
+
 ## Verweise auf Ergebnisse / Übungen / Dokumentationen
+
+- [Projektstruktur & Umsetzungsschritte](https://github.com/Arlind-tbz/modul-300?tab=readme-ov-file#projektstruktur--umsetzungsschritte)

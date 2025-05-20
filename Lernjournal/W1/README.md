@@ -29,4 +29,4 @@ Es ist mir ehrlich gesagt nicht leicht gefallen, mich für ein konkretes Projekt
 
 ## Verweise auf Ergebnisse / Übungen / Dokumentationen
 
-- [Informieren](https://github.com/Arlind-tbz/modul-300?tab=readme-ov-file#informieren)
+- [Projektideen](https://github.com/Arlind-tbz/modul-300?tab=readme-ov-file#projektideen)
