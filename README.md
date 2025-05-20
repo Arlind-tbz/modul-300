@@ -1,1 +1,15 @@
 # Modul 300 - Plattformübergreifende Dienste in ein Netzwerk integrieren
+
+# Inhaltsverzeignis
+- [Modul 300 - Plattformübergreifende Dienste in ein Netzwerk integrieren](#modul-300---plattformübergreifende-dienste-in-ein-netzwerk-integrieren)
+
+# Informieren
+
+In der Informationsphase habe ich mir verschiedene Projekte angeschaut. Ich möchte vor allem mit den Themen CI/CD, Docker und den Cloud-Plattformen AWS oder Azure arbeiten.
+
+Ich bin mir noch nicht ganz sicher, was ich genau umsetzen soll. Meine Idee bis jetzt:
+
+- Ich erstelle mehrere Dockerfiles für verschiedene Services.
+- Diese baue ich automatisch mit einer CI/CD-Pipeline.
+- Danach lade ich die fertigen Container-Images in eine Cloud-Registry, z. B. Azure Container Registry oder AWS ECR.
+- Zum Schluss starte ich eine virtuelle Maschine, die diese Container ausführt und die Services bereitstellt.
