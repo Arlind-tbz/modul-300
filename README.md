@@ -12,4 +12,6 @@ Ich bin mir noch nicht ganz sicher, was ich genau umsetzen soll. Meine Idee bis 
 - Ich erstelle mehrere Dockerfiles für verschiedene Services.
 - Diese baue ich automatisch mit einer CI/CD-Pipeline.
 - Danach lade ich die fertigen Container-Images in eine Cloud-Registry, z. B. Azure Container Registry oder AWS ECR.
-- Zum Schluss starte ich eine virtuelle Maschine, die diese Container ausführt und die Services bereitstellt.
+- Danach starte ich eine virtuelle Maschine, die diese Container ausführt und die Services bereitstellt.
+- Zum Schluss werde ich mit Uptime Kuma einen regelmässigen Überwachungs-Job für meine Services einrichten.
+- Beide VMs sollten idealer weise mit Terraform verwaltet werden.
