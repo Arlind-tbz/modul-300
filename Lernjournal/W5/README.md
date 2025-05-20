@@ -1,7 +1,7 @@
-# Lernjournal | Woche 2 - 20.05.2025
+# Lernjournal | Woche 5 - 10.06.2025
 
 ## Inhaltsverzeichnis
-- [Lernjournal | Woche 2 - 20.05.2025](#lernjournal--woche-2---20052025)
+- [Lernjournal | Woche 5 - 10.06.2025](#lernjournal--woche-5---10062025)
   - [Inhaltsverzeichnis](#inhaltsverzeichnis)
   - [Tagesziele](#tagesziele)
   - [Erreichte Tagesziele](#erreichte-tagesziele)

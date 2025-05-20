@@ -1,6 +1,6 @@
 # Modul 300 - Plattformübergreifende Dienste in ein Netzwerk integrieren
 
-# Inhaltsverzeignis
+## Inhaltsverzeignis
 - [Modul 300 - Plattformübergreifende Dienste in ein Netzwerk integrieren](#modul-300---plattformübergreifende-dienste-in-ein-netzwerk-integrieren)
 - [Inhaltsverzeignis](#inhaltsverzeignis)
 - [Informieren](#informieren)

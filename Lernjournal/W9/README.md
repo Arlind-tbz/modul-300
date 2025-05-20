@@ -1,7 +1,7 @@
-# Lernjournal | Woche 2 - 20.05.2025
+# Lernjournal | Woche 9 - 08.07.2025
 
 ## Inhaltsverzeichnis
-- [Lernjournal | Woche 2 - 20.05.2025](#lernjournal--woche-2---20052025)
+- [Lernjournal | Woche 9 - 08.07.2025](#lernjournal--woche-9---08072025)
   - [Inhaltsverzeichnis](#inhaltsverzeichnis)
   - [Tagesziele](#tagesziele)
   - [Erreichte Tagesziele](#erreichte-tagesziele)
