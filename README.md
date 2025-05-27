@@ -45,5 +45,5 @@ Terraform bietet auch eine **CLI**, die es ermöglicht, die **Infrastruktur** di
 Terraform habe ich mit winget installiert:
 
 ```powershell
-winget install terraform
+winget install hashicorp.terraform
 ```
