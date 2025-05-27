@@ -33,3 +33,17 @@ Die Anwendungen selbst werden eher einfach bleiben – zum Beispiel ein kleiner 
 - Die **Infrastruktur**, vor allem die **VMs**, wird mit **Terraform** erstellt und verwaltet.
 
 Mir ist wichtig, dass ich mit diesem Projekt zeigen kann, wie man eine einfache, aber gut strukturierte **Cloud-Umgebung** automatisiert aufbauen kann – mit Fokus auf **DevOps-Themen** wie **CI/CD**, **Containerisierung** und **Infrastructure as Code**. Natürlich gebe ich mir auch bei der **Web App** Mühe, auch wenn sie nicht der Hauptteil des Projekts ist.
+
+# Umsetzung
+
+## Terraform
+
+Ich habe mich heute mit Terraform auseinandergesetzt. Terraform ist eine Open-Source-Software, die es ermöglicht, Infrastruktur in einer **Cloud-Umgebung** zu verwalten. Terraform bietet eine Vielzahl von **Modulen**, die einfach zu verwenden sind. Zum Beispiel mit Azure können **Resource-Gruppen** erstellt werden, die dann **VMs**, **Container-Images** und **Storage-Accounts** enthalten.
+
+Terraform bietet auch eine **CLI**, die es ermöglicht, die **Infrastruktur** direkt aus der Kommandozeile zu verwalten.
+
+Terraform habe ich mit winget installiert:
+
+```powershell
+winget install terraform
+```
