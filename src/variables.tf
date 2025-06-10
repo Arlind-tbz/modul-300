@@ -1,10 +1,12 @@
 variable "location" {
-  default = "Switzerland North"
+  description = "Azure region to deploy resources"
+  default     = "Switzerland North"
 }
 
 variable "resource_group_name" {
   default = "example-resources"
 }
+
 
 variable "vnet_name" {
   default = "example-vnet"
@@ -31,7 +33,17 @@ variable "vm_size" {
 }
 
 variable "ssh_public_key" {
-  description = "SSH key"
+  description = "Your SSH public key"
+  type        = string
+}
+
+variable "subscription_id" {
+  description = "Azure subscription ID"
+  type        = string
+}
+
+variable "tenant_id" {
+  description = "Azure tenant ID"
   type        = string
 }
 
