@@ -1,6 +1,6 @@
 variable "location" {
   description = "Azure region to deploy resources"
-  default     = "Switzerland North"
+  default     = "switzerlandnorth"
 }
 
 variable "resource_group_name" {
