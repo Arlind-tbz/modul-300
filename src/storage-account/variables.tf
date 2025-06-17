@@ -17,3 +17,13 @@ variable "container_name" {
   description = "Name of the blob container to store the tfstate file"
   default     = "tfstate"
 }
+
+variable "subscription_id" {
+  description = "Azure subscription ID"
+  type        = string
+}
+
+variable "tenant_id" {
+  description = "Azure tenant ID"
+  type        = string
+}
