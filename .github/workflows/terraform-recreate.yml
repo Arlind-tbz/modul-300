@@ -1,0 +1,41 @@
+# .github/workflows/terraform-recreate.yml
+name: Recreate Terraform Environment
+
+on:
+  workflow_dispatch:  # Manually triggered
+
+jobs:
+  terraform-recreate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Terraform Init
+        working-directory: ./src
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: ./src
+        run: |
+          terraform apply -auto-approve \
+            -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
+            -var "subscription_id=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" \
+            -var "tenant_id=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}"
+
+      - name: Commit updated state/lockfile
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: update Terraform state and lockfile" || echo "Nothing to commit"
+          git push origin HEAD:main
