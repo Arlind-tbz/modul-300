@@ -1,4 +1,7 @@
-/src/terraform.tfvars
+*.tfvars
 .terraform.lock.hcl
 .terraform/
 *.backup
+*.tfstate
+*.tfstate.backup
+tfplan

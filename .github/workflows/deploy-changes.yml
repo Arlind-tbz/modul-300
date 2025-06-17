@@ -9,10 +9,32 @@ permissions:
   contents: write
 
 jobs:
-  terraform:
+  backend:
     runs-on: ubuntu-latest
+    name: Setup Terraform backend (Azure Storage)
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Terraform Init & Apply (Storage-Account)
+        working-directory: ./src/storage-account
+        run: |
+          terraform init -input=false
+          terraform apply -auto-approve
+
+  deploy-infra:
+    runs-on: ubuntu-latest
+    name: Deploy Infrastructure
+    needs: backend
+    steps:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
@@ -28,11 +50,11 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Terraform Init
-        working-directory: ./src
-        run: terraform init
+        working-directory: ./src/terraform
+        run: terraform init -input=false
 
       - name: Terraform Plan
-        working-directory: ./src
+        working-directory: ./src/terraform
         run: |
           terraform plan \
             -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
@@ -41,7 +63,7 @@ jobs:
             -out=tfplan
 
       - name: Terraform Apply
-        working-directory: ./src
+        working-directory: ./src/terraform
         run: terraform apply -auto-approve tfplan
 
       - name: Commit fmt & lockfile changes
