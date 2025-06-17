@@ -1,8 +1,7 @@
-# .github/workflows/terraform-recreate.yml
 name: Recreate Terraform Environment
 
 on:
-  workflow_dispatch:  # Manually triggered
+  workflow_dispatch:
 
 jobs:
   terraform-recreate:

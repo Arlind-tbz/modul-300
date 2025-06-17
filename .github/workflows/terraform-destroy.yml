@@ -1,7 +1,14 @@
-# .github/workflows/terraform-destroy.yml
 name: Destroy Terraform Environment
 
 on:
+  schedule:
+    - cron: '30 17 * * 0'
+    - cron: '30 17 * * 1'
+    - cron: '30 18 * * 2'
+    - cron: '30 17 * * 3'
+    - cron: '30 17 * * 4'
+    - cron: '30 17 * * 5'
+    - cron: '30 17 * * 6'
   workflow_dispatch:
 
 jobs:
