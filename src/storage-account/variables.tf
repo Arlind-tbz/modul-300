@@ -10,7 +10,7 @@ variable "resource_group_name" {
 
 variable "storage_account_name" {
   description = "Globally unique name for the Terraform backend storage account"
-  default     = "tfstatebackend1234"
+  default     = "arlindsulejmanitfstate"
 }
 
 variable "container_name" {
