@@ -1,1 +1,4 @@
 /src/terraform.tfvars
+.terraform.lock.hcl
+.terraform/
+*.backup
