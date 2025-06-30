@@ -30,14 +30,15 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Terraform Init
+        working-directory: ./src/storage
+        run: terraform init
+
       - name: Import latest Key Vault secrets into Terraform state
         working-directory: ./src/storage
         run: |
-          set -euo pipefail
-          set -x  # Show commands as they run
 
           echo "Initializing Terraform"
-          terraform init
 
           echo "Importing resource group..."
           terraform import \
@@ -65,7 +66,7 @@ jobs:
             -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
             -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
             azurerm_key_vault_secret.ssh_public_key \
-            "arlindsulejmanitfvars/ssh-public-key/$ssh_version"
+            "$ssh_uri"
 
           echo "Fetching latest version of startup-script"
           startup_uri=$(az keyvault secret list-versions \
@@ -82,11 +83,7 @@ jobs:
           startup_version=$(basename "$startup_uri")
           terraform import \
             azurerm_key_vault_secret.startup_script \
-            "arlindsulejmanitfvars/startup-script/$startup_version"
-
-      - name: Terraform Init
-        working-directory: ./src/storage
-        run: terraform init
+            "$startup_uri"
 
       - name: Terraform Plan
         working-directory: ./src/storage
