@@ -37,7 +37,7 @@ jobs:
           set -x  # Show commands as they run
 
           echo "Importing resource group..."
-          terraform import -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" azurerm_resource_group.storage_rg "/subscriptions/${ARM_SUBSCRIPTION_ID}/resourceGroups/terraform-storage-rg"
+          terraform import -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" -var "tenant_id=${{ env.ARM_TENANT_ID }}" azurerm_resource_group.storage_rg "/subscriptions/${{ secrets.ARM_SUBSCRIPTION_ID }}/resourceGroups/terraform-storage-rg"
 
           echo "Fetching latest version of ssh-public-key"
           ssh_uri=$(az keyvault secret list-versions \
@@ -52,7 +52,7 @@ jobs:
           fi
 
           ssh_version=$(basename "$ssh_uri")
-          terraform import -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" azurerm_key_vault_secret.ssh_public_key "arlindsulejmanitfvars/ssh-public-key/$ssh_version"
+          terraform import -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" -var "tenant_id=${{ env.ARM_TENANT_ID }}" azurerm_key_vault_secret.ssh_public_key "arlindsulejmanitfvars/ssh-public-key/$ssh_version"
 
           echo "Fetching latest version of startup-script"
           startup_uri=$(az keyvault secret list-versions \
