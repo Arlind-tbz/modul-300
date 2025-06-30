@@ -31,9 +31,12 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Import latest Key Vault secrets into Terraform state
+        working-directory: ./src/storage
         run: |
           set -euo pipefail
-          cd ./src/storage
+          az account show
+
+          terraform import azurerm_resource_group.storage_rg "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/terraform-storage-rg"
 
           echo "Fetching latest version of ssh-public-key"
           ssh_id=$(az keyvault secret list-versions \
