@@ -52,7 +52,7 @@ jobs:
           fi
 
           ssh_version=$(basename "$ssh_uri")
-          terraform import azurerm_key_vault_secret.ssh_public_key "arlindsulejmanitfvars/ssh-public-key/$ssh_version"
+          terraform import -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" azurerm_key_vault_secret.ssh_public_key "arlindsulejmanitfvars/ssh-public-key/$ssh_version"
 
           echo "Fetching latest version of startup-script"
           startup_uri=$(az keyvault secret list-versions \
