@@ -82,6 +82,9 @@ jobs:
 
           startup_version=$(basename "$startup_uri")
           terraform import \
+            -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
+            -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
+            -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
             azurerm_key_vault_secret.startup_script \
             "$startup_uri"
 
