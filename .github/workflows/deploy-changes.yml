@@ -34,24 +34,44 @@ jobs:
         working-directory: ./src/storage
         run: |
           set -euo pipefail
-          az account show
+          set -x  # Show commands as they run
 
-          terraform import azurerm_resource_group.storage_rg "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/terraform-storage-rg"
+          echo "Importing resource group..."
+          terraform import azurerm_resource_group.storage_rg "/subscriptions/${ARM_SUBSCRIPTION_ID}/resourceGroups/terraform-storage-rg"
 
-          echo "Fetching latest version of ssh-public-key"
-          ssh_id=$(az keyvault secret list-versions \
+          echo "Fetching latest version of ssh-public-key (single-version safe)"
+          secret_versions=$(az keyvault secret list-versions \
             --vault-name arlindsulejmanitfvars \
             --name ssh-public-key \
-            --query "sort_by([].{id:id, created:attributes.created}, &created)[-1].id" \
+            --query "[].id" \
             --output tsv)
+
+          if [[ -z "$secret_versions" ]]; then
+            echo "No versions found for ssh-public-key!"
+            exit 1
+          fi
+
+          # Get the only version (or first one if more)
+          ssh_id=$(echo "$secret_versions" | head -n1)
+
+          echo "Importing ssh-public-key from: $ssh_id"
           terraform import azurerm_key_vault_secret.ssh_public_key "$ssh_id"
 
           echo "Fetching latest version of startup-script"
-          startup_id=$(az keyvault secret list-versions \
+          startup_versions=$(az keyvault secret list-versions \
             --vault-name arlindsulejmanitfvars \
             --name startup-script \
-            --query "sort_by([].{id:id, created:attributes.created}, &created)[-1].id" \
+            --query "[].id" \
             --output tsv)
+
+          if [[ -z "$startup_versions" ]]; then
+            echo "No versions found for startup-script!"
+            exit 1
+          fi
+
+          startup_id=$(echo "$startup_versions" | head -n1)
+
+          echo "Importing startup-script from: $startup_id"
           terraform import azurerm_key_vault_secret.startup_script "$startup_id"
 
       - name: Terraform Init
