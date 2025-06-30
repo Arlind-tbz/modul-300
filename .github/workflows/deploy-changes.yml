@@ -37,7 +37,7 @@ jobs:
           set -x  # Show commands as they run
 
           echo "Importing resource group..."
-          terraform import azurerm_resource_group.storage_rg "/subscriptions/${ARM_SUBSCRIPTION_ID}/resourceGroups/terraform-storage-rg"
+          terraform import -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" azurerm_resource_group.storage_rg "/subscriptions/${ARM_SUBSCRIPTION_ID}/resourceGroups/terraform-storage-rg"
 
           echo "Fetching latest version of ssh-public-key"
           ssh_uri=$(az keyvault secret list-versions \
