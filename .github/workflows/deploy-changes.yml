@@ -11,51 +11,55 @@ permissions:
 jobs:
   backend:
     runs-on: ubuntu-latest
-    name: Setup Terraform backend (Azure Storage)
+    env:
+      ARM_SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+      ARM_CLIENT_ID:       ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
+      ARM_CLIENT_SECRET:   ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
+      ARM_TENANT_ID:       ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Terraform
+      - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Azure Login
+      - name: Azure Login (CLI)
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Terraform Init (local backend)
-        working-directory: ./src/storage-account
+      - name: Import latest Key Vault secrets into Terraform state
         run: |
-          terraform init -input=false
-          terraform apply -auto-approve -refresh-only || true
+          set -euo pipefail
+          cd ./src/storage
 
-      - name: Terraform Import Existing Backend Resources (if needed)
-        working-directory: ./src/storage-account
-        env:
-          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-          RESOURCE_GROUP_NAME: tfstate-rg
-          STORAGE_ACCOUNT_NAME: tfstatebackend20240617
-          CONTAINER_NAME: tfstate
+          echo "Fetching latest version of ssh-public-key"
+          ssh_id=$(az keyvault secret list-versions \
+            --vault-name arlindsulejmanitfvars \
+            --name ssh-public-key \
+            --query "sort_by([].{id:id, created:attributes.created}, &created)[-1].id" \
+            --output tsv)
+          terraform import azurerm_key_vault_secret.ssh_public_key "$ssh_id"
+
+          echo "Fetching latest version of startup-script"
+          startup_id=$(az keyvault secret list-versions \
+            --vault-name arlindsulejmanitfvars \
+            --name startup-script \
+            --query "sort_by([].{id:id, created:attributes.created}, &created)[-1].id" \
+            --output tsv)
+          terraform import azurerm_key_vault_secret.startup_script "$startup_id"
+
+      - name: Terraform Init
+        working-directory: ./src/storage
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: ./src/storage
         run: |
-          echo "Importing Resource Group if not in state..."
-          terraform state list | grep azurerm_resource_group.tfstate || \
-          terraform import azurerm_resource_group.tfstate \
-            "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME"
-
-          echo "Importing Storage Account if not in state..."
-          terraform state list | grep azurerm_storage_account.tfstate || \
-          terraform import azurerm_storage_account.tfstate \
-            "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME"
-
-          echo "Importing Storage Container if not in state..."
-          terraform state list | grep azurerm_storage_container.tfstate || \
-          terraform import azurerm_storage_container.tfstate \
-            "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME/blobServices/default/containers/$CONTAINER_NAME"
-
-      - name: Terraform Plan & Apply
-        working-directory: ./src/storage-account
-        run: terraform apply -auto-approve
+          terraform plan \
+            -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
+            -out=tfplan
 
   deploy-infra:
     runs-on: ubuntu-latest

@@ -4,37 +4,14 @@ variable "location" {
 }
 
 variable "resource_group_name" {
-  default = "example-resources"
+  description = "Name of resource group for storage resources"
+  default     = "terraform-storage-rg"
 }
 
-
-variable "vnet_name" {
-  default = "example-vnet"
-}
-
-variable "subnet_name" {
-  default = "example-subnet"
-}
-
-variable "nic_name" {
-  default = "example-nic"
-}
-
-variable "vm_name" {
-  default = "example-vm"
-}
-
-variable "admin_username" {
-  default = "azureuser"
-}
-
-variable "vm_size" {
-  default = "Standard_B1s"
-}
-
-variable "ssh_public_key" {
-  description = "Your SSH public key"
+variable "key_vault_name" {
+  description = "Name of the Key Vault for storing secrets"
   type        = string
+  default     = "arlindsulejmanitfvars"
 }
 
 variable "subscription_id" {
@@ -47,9 +24,16 @@ variable "tenant_id" {
   type        = string
 }
 
+variable "ssh_public_key" {
+  description = "Your SSH public key"
+  type        = string
+  sensitive   = true
+}
+
 variable "startup_script" {
   description = "cloud-init startup script"
   type        = string
+  sensitive   = true
   default     = <<-EOT
     #!/bin/bash
     apt-get update
