@@ -98,7 +98,7 @@ jobs:
             -out=tfplan
 
       - name: Terraform Apply
-        working-directory: ./src/terraform
+        working-directory: ./src/storage
         run: |
           terraform apply \
             -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
