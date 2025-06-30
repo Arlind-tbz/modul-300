@@ -1,5 +1,5 @@
 provider "azurerm" {
-  features        {}
+  features {}
   subscription_id = var.subscription_id
   tenant_id       = var.tenant_id
 }
@@ -22,7 +22,7 @@ resource "azurerm_key_vault" "tfvars" {
   sku_name            = "standard"
 
   # Disable purge protection for easier management
-  purge_protection_enabled = false
+  purge_protection_enabled   = false
   soft_delete_retention_days = 7
 
   access_policy {
@@ -42,7 +42,7 @@ resource "azurerm_key_vault" "tfvars" {
 
 resource "azurerm_key_vault_secret" "ssh_public_key" {
   name         = "ssh-public-key"
-  value        = "placeholder"  # required just to pass validation
+  value        = "placeholder" # required just to pass validation
   key_vault_id = azurerm_key_vault.tfvars.id
 
   lifecycle {
