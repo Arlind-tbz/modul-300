@@ -39,40 +39,35 @@ jobs:
           echo "Importing resource group..."
           terraform import azurerm_resource_group.storage_rg "/subscriptions/${ARM_SUBSCRIPTION_ID}/resourceGroups/terraform-storage-rg"
 
-          echo "Fetching latest version of ssh-public-key (single-version safe)"
-          secret_versions=$(az keyvault secret list-versions \
+          echo "Fetching latest version of ssh-public-key"
+          ssh_uri=$(az keyvault secret list-versions \
             --vault-name arlindsulejmanitfvars \
             --name ssh-public-key \
             --query "[].id" \
-            --output tsv)
+            --output tsv | head -n1)
 
-          if [[ -z "$secret_versions" ]]; then
+          if [[ -z "$ssh_uri" ]]; then
             echo "No versions found for ssh-public-key!"
             exit 1
           fi
 
-          # Get the only version (or first one if more)
-          ssh_id=$(echo "$secret_versions" | head -n1)
-
-          echo "Importing ssh-public-key from: $ssh_id"
-          terraform import azurerm_key_vault_secret.ssh_public_key "$ssh_id"
+          ssh_version=$(basename "$ssh_uri")
+          terraform import azurerm_key_vault_secret.ssh_public_key "arlindsulejmanitfvars/ssh-public-key/$ssh_version"
 
           echo "Fetching latest version of startup-script"
-          startup_versions=$(az keyvault secret list-versions \
+          startup_uri=$(az keyvault secret list-versions \
             --vault-name arlindsulejmanitfvars \
             --name startup-script \
             --query "[].id" \
-            --output tsv)
+            --output tsv | head -n1)
 
-          if [[ -z "$startup_versions" ]]; then
+          if [[ -z "$startup_uri" ]]; then
             echo "No versions found for startup-script!"
             exit 1
           fi
 
-          startup_id=$(echo "$startup_versions" | head -n1)
-
-          echo "Importing startup-script from: $startup_id"
-          terraform import azurerm_key_vault_secret.startup_script "$startup_id"
+          startup_version=$(basename "$startup_uri")
+          terraform import azurerm_key_vault_secret.startup_script "arlindsulejmanitfvars/startup-script/$startup_version"
 
       - name: Terraform Init
         working-directory: ./src/storage
