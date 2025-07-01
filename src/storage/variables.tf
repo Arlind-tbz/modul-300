@@ -44,7 +44,7 @@ variable "startup_script" {
 variable "storage_account_name" {
   description = "Globally unique storage account name for Terraform backend"
   type        = string
-  default     = "tfstatestorearlindsulejmani"
+  default     = "tfstatearlindsulejmani"
 }
 
 variable "storage_container_name" {
