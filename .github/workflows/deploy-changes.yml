@@ -128,6 +128,7 @@ jobs:
             git commit -m "chore: terraform fmt and lockfile update"
             git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
             git push origin HEAD:main
+          fi
 
   deploy-infra:
     name: Deploy Infrastructure
@@ -191,3 +192,4 @@ jobs:
             git commit -m "chore: terraform fmt and lockfile update"
             git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
             git push origin HEAD:main
+          fi
