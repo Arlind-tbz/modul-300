@@ -42,13 +42,10 @@ resource "azurerm_key_vault" "tfvars" {
 
 resource "azurerm_key_vault_secret" "ssh_public_key" {
   name         = "ssh-public-key"
-  value        = "placeholder" # required just to pass validation
+  value        = var.ssh_public_key
   key_vault_id = azurerm_key_vault.tfvars.id
-
-  lifecycle {
-    ignore_changes = [value]
-  }
 }
+
 
 resource "azurerm_key_vault_secret" "startup_script" {
   name         = "startup-script"
