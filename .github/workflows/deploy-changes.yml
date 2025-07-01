@@ -45,6 +45,22 @@ jobs:
             azurerm_resource_group.storage_rg \
             "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/terraform-storage-rg" || echo "Resource group not found for import (may be new)"
 
+            echo "Importing storage account..."
+            terraform import \
+              -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
+              -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
+              -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
+              azurerm_storage_account.tfstate \
+              "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/terraform-storage-rg/providers/Microsoft.Storage/storageAccounts/tfstatestorearlindsulejmani" || echo "Storage account not found or already imported"
+
+            echo "Importing tfstate container..."
+            terraform import \
+              -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
+              -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
+              -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
+              azurerm_storage_container.tfstate \
+              "tfstatestorearlindsulejmani/tfstate" || echo "Storage container not found or already imported"
+
           echo "Importing Key Vault..."
           terraform import \
             -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
