@@ -148,7 +148,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Terraform Init
-        working-directory: ./src/terraform
+        working-directory: ./src/infrastructure
         env:
           ARM_SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
           ARM_CLIENT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
@@ -157,7 +157,7 @@ jobs:
         run: terraform init -input=false
 
       - name: Terraform Plan
-        working-directory: ./src/terraform
+        working-directory: ./src/infrastructure
         env:
           ARM_SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
           ARM_CLIENT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
@@ -169,7 +169,7 @@ jobs:
             -out=tfplan
 
       - name: Terraform Apply
-        working-directory: ./src/terraform
+        working-directory: ./src/infrastructure
         env:
           ARM_SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
           ARM_CLIENT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
@@ -178,7 +178,7 @@ jobs:
         run: terraform apply -auto-approve tfplan
 
       - name: Terraform Fmt & Lockfile Update
-        working-directory: ./src/terraform
+        working-directory: ./src/infrastructure
         run: |
           terraform fmt -recursive
           terraform init -lockfile=./.terraform.lock.hcl
