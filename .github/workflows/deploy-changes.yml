@@ -51,7 +51,7 @@ jobs:
             -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
             -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
             azurerm_storage_account.tfstate \
-            "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/terraform-storage-rg/providers/Microsoft.Storage/storageAccounts/tfstatestorearlindsulejmani" || echo "Storage account not found or already imported"
+            "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/terraform-storage-rg/providers/Microsoft.Storage/storageAccounts/tfstatearlindsulejmani" || echo "Storage account not found or already imported"
 
           echo "Importing tfstate container..."
           terraform import \
@@ -59,7 +59,7 @@ jobs:
             -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
             -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
             azurerm_storage_container.tfstate \
-            "tfstatestorearlindsulejmani/tfstate" || echo "Storage container not found or already imported"
+            "tfstatearlindsulejmani/tfstate" || echo "Storage container not found or already imported"
 
           echo "Importing Key Vault..."
           terraform import \
