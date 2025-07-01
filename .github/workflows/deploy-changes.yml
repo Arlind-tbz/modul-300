@@ -155,7 +155,6 @@ jobs:
         working-directory: ./src/infrastructure
         run: |
           terraform plan \
-            -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
             -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
             -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
             -out=tfplan
@@ -164,7 +163,6 @@ jobs:
         working-directory: ./src/infrastructure
         run: |
           terraform apply \
-            -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
             -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
             -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
             -auto-approve tfplan
