@@ -4,10 +4,9 @@ provider "azurerm" {
   tenant_id       = var.tenant_id
 }
 
-# Data source to get existing Key Vault
 data "azurerm_key_vault" "tfvars" {
   name                = var.key_vault_name
-  resource_group_name = var.resource_group_name
+  resource_group_name = var.storage_resource_group_name
 }
 
 # Retrieve SSH key from Key Vault
