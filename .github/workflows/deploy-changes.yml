@@ -37,7 +37,6 @@ jobs:
       - name: Terraform Import
         working-directory: ./src/storage
         run: |
-
           echo "Importing resource group..."
           terraform import \
             -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
@@ -132,6 +131,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Deploy Infrastructure
     needs: backend
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -147,9 +147,14 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Terraform Init
+      - name: Terraform Init with Backend Config
         working-directory: ./src/infrastructure
-        run: terraform init -input=false
+        run: |
+          terraform init \
+            -backend-config="resource_group_name=terraform-storage-rg" \
+            -backend-config="storage_account_name=tfstatestorearlindsulejmani" \
+            -backend-config="container_name=tfstate" \
+            -backend-config="key=infrastructure.tfstate"
 
       - name: Terraform Plan
         working-directory: ./src/infrastructure

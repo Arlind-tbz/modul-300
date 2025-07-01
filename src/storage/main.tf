@@ -40,19 +40,38 @@ resource "azurerm_key_vault" "tfvars" {
   }
 }
 
+# SSH public key stored as secret
 resource "azurerm_key_vault_secret" "ssh_public_key" {
   name         = "ssh-public-key"
   value        = var.ssh_public_key
   key_vault_id = azurerm_key_vault.tfvars.id
 }
 
-
+# Startup script stored as secret
 resource "azurerm_key_vault_secret" "startup_script" {
   name         = "startup-script"
-  value        = "placeholder"
+  value        = var.startup_script
   key_vault_id = azurerm_key_vault.tfvars.id
 
   lifecycle {
     ignore_changes = [value]
   }
+}
+
+# Storage Account for remote tfstate backend
+resource "azurerm_storage_account" "tfstate" {
+  name                     = var.storage_account_name
+  resource_group_name      = azurerm_resource_group.storage_rg.name
+  location                 = azurerm_resource_group.storage_rg.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+
+  allow_blob_public_access = false
+}
+
+# Storage Container to hold tfstate
+resource "azurerm_storage_container" "tfstate" {
+  name                  = var.storage_container_name
+  storage_account_name  = azurerm_storage_account.tfstate.name
+  container_access_type = "private"
 }

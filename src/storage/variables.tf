@@ -40,3 +40,15 @@ variable "startup_script" {
     apt-get upgrade
   EOT
 }
+
+variable "storage_account_name" {
+  description = "Globally unique storage account name for Terraform backend"
+  type        = string
+  default     = "tfstatestorearlindsulejmani"
+}
+
+variable "storage_container_name" {
+  description = "Blob container name for tfstate file"
+  type        = string
+  default     = "tfstate"
+}
