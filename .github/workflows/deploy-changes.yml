@@ -8,15 +8,15 @@ on:
 permissions:
   contents: write
 
+env:
+  ARM_SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+  ARM_CLIENT_ID:       ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
+  ARM_CLIENT_SECRET:   ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
+  ARM_TENANT_ID:       ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+
 jobs:
   backend:
     runs-on: ubuntu-latest
-
-    env:
-      ARM_SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-      ARM_CLIENT_ID:       ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
-      ARM_CLIENT_SECRET:   ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
-      ARM_TENANT_ID:       ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
 
     steps:
       - name: Checkout code
@@ -149,33 +149,25 @@ jobs:
 
       - name: Terraform Init
         working-directory: ./src/infrastructure
-        env:
-          ARM_SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-          ARM_CLIENT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
-          ARM_CLIENT_SECRET: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
-          ARM_TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: terraform init -input=false
 
       - name: Terraform Plan
         working-directory: ./src/infrastructure
-        env:
-          ARM_SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-          ARM_CLIENT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
-          ARM_CLIENT_SECRET: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
-          ARM_TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
           terraform plan \
             -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
+            -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
+            -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
             -out=tfplan
 
       - name: Terraform Apply
         working-directory: ./src/infrastructure
-        env:
-          ARM_SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-          ARM_CLIENT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
-          ARM_CLIENT_SECRET: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
-          ARM_TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
-        run: terraform apply -auto-approve tfplan
+        run: |
+          terraform apply \
+            -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
+            -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
+            -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
+            -auto-approve tfplan
 
       - name: Terraform Fmt & Lockfile Update
         working-directory: ./src/infrastructure
