@@ -69,13 +69,13 @@ resource "azurerm_network_interface" "nic" {
 }
 
 resource "azurerm_linux_virtual_machine" "vm" {
-  name                             = var.vm_name
-  location                         = var.location
-  resource_group_name              = azurerm_resource_group.infra_rg.name
-  size                             = var.vm_size
-  admin_username                   = var.admin_username
+  name                            = var.vm_name
+  location                        = var.location
+  resource_group_name             = azurerm_resource_group.infra_rg.name
+  size                            = var.vm_size
+  admin_username                  = var.admin_username
   disable_password_authentication = true
-  network_interface_ids            = [azurerm_network_interface.nic.id]
+  network_interface_ids           = [azurerm_network_interface.nic.id]
 
   admin_ssh_key {
     username   = var.admin_username
