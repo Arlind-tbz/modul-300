@@ -32,11 +32,11 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Terraform Init
-        working-directory: ./src/storage
+        working-directory: ./src/terraform/storage
         run: terraform init
 
       - name: Terraform Import Resources
-        working-directory: ./src/storage
+        working-directory: ./src/terraform/storage
         run: |
           terraform import \
             -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
@@ -95,7 +95,7 @@ jobs:
           fi
 
       - name: Terraform Plan
-        working-directory: ./src/storage
+        working-directory: ./src/terraform/storage
         run: |
           terraform plan \
             -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
@@ -104,7 +104,7 @@ jobs:
             -out=tfplan
 
       - name: Terraform Apply
-        working-directory: ./src/storage
+        working-directory: ./src/terraform/storage
         run: |
           terraform apply \
             -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
@@ -113,7 +113,7 @@ jobs:
             -auto-approve tfplan
 
       - name: Terraform Format & Lockfile Update
-        working-directory: ./src/storage
+        working-directory: ./src/terraform/storage
         run: |
           terraform fmt -recursive
           terraform init -lockfile=./.terraform.lock.hcl
@@ -152,7 +152,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Terraform Init
-        working-directory: ./src/infrastructure
+        working-directory: ./src/terraform/infrastructure
         run: |
           terraform init \
             -backend-config="resource_group_name=terraform-storage-rg" \
@@ -161,7 +161,7 @@ jobs:
             -backend-config="key=infrastructure.tfstate"
 
       - name: Terraform Plan
-        working-directory: ./src/infrastructure
+        working-directory: ./src/terraform/infrastructure
         run: |
           terraform plan \
             -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
@@ -169,7 +169,7 @@ jobs:
             -out=tfplan
 
       - name: Terraform Apply
-        working-directory: ./src/infrastructure
+        working-directory: ./src/terraform/infrastructure
         run: |
           terraform apply \
             -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
@@ -177,7 +177,7 @@ jobs:
             -auto-approve tfplan
 
       - name: Terraform Format & Lockfile Update
-        working-directory: ./src/infrastructure
+        working-directory: ./src/terraform/infrastructure
         run: |
           terraform fmt -recursive
           terraform init -lockfile=./.terraform.lock.hcl
