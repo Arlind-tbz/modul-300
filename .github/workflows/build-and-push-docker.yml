@@ -33,16 +33,19 @@ jobs:
           az acr login --name $ACR_NAME
 
       - name: Build & Push Frontend
+        working-directory: ./src/docker/frontend
         run: |
-          docker build -t $ACR_LOGIN_SERVER/frontend:latest ./src/docker/frontend
+          docker build -t $ACR_LOGIN_SERVER/frontend:latest .
           docker push $ACR_LOGIN_SERVER/frontend:latest
 
       - name: Build & Push Backend
+        working-directory: ./src/docker/backend
         run: |
-          docker build -t $ACR_LOGIN_SERVER/backend:latest ./src/docker/backend
+          docker build -t $ACR_LOGIN_SERVER/backend:latest .
           docker push $ACR_LOGIN_SERVER/backend:latest
 
       - name: Build & Push DB
+        working-directory: ./src/docker/db
         run: |
-          docker build -t $ACR_LOGIN_SERVER/db:latest ./src/docker/db
+          docker build -t $ACR_LOGIN_SERVER/db:latest .
           docker push $ACR_LOGIN_SERVER/db:latest
