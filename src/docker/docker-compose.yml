@@ -1,0 +1,38 @@
+services:
+  mysql:
+    build: ./db
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+    restart: unless-stopped
+    networks:
+      - todo_app
+
+  backend:
+    build: ./backend
+    container_name: backend
+    environment:
+      MYSQL_HOST: ${MYSQL_HOST:-mysql}
+      MYSQL_USER: ${MYSQL_USER:-root}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-todo_db}
+    restart: unless-stopped
+    networks:
+      - todo_app
+    depends_on:
+      - mysql
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    networks:
+      - todo_app
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8080:8080"
+
+networks:
+  todo_app:
+    driver: bridge

@@ -13,3 +13,6 @@ tfplan
 **/tfplan
 .tfplan
 **/*.tfplan
+
+**/.env
+.env

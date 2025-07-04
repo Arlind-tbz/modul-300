@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head><title>Python Frontend</title></head>
+<body>
+  <h1>Todo List</h1>
+  <form action="/add" method="post">
+    <input name="title" placeholder="New task">
+    <button type="submit">Add</button>
+  </form>
+  <ul>
+    {% for task in tasks %}
+      <li>{{ task.title }} <a href="/delete/{{ task.id }}">❌</a></li>
+    {% endfor %}
+  </ul>
+</body>
+</html>
