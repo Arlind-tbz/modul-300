@@ -59,5 +59,5 @@ variable "tenant_id" {
 variable "acr_name" {
   description = "Globally unique name for Azure Container Registry"
   type        = string
-  default     = "arlind-dev-acr"
+  default     = "arlinddevacr"
 }
