@@ -188,6 +188,40 @@ jobs:
               azurerm_key_vault_secret.mysql_database "$mysql_database_uri"
           fi
 
+      - name: Import Key Vault acr_username Secret
+        working-directory: ./src/terraform/storage
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+        run: |
+          acr_username_uri=$(az keyvault secret list-versions \
+            --vault-name arlindsulejmanitfvars \
+            --name mysql-database \
+            --query "[].id" \
+            --output tsv | head -n1 || true)
+
+          if [[ -n "$acr_username_uri" ]]; then
+            terraform import \
+              azurerm_key_vault_secret.acr_username "$acr_username_uri"
+          fi
+
+      - name: Import Key Vault acr-password Secret
+        working-directory: ./src/terraform/storage
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+        run: |
+          acr-password_uri=$(az keyvault secret list-versions \
+            --vault-name arlindsulejmanitfvars \
+            --name mysql-database \
+            --query "[].id" \
+            --output tsv | head -n1 || true)
+
+          if [[ -n "$acr-password_uri" ]]; then
+            terraform import \
+              azurerm_key_vault_secret.acr-password "$acr-password_uri"
+          fi
+
       - name: Terraform Validate
         working-directory: ./src/terraform/storage
         run: terraform validate

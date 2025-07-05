@@ -10,7 +10,7 @@ data "azurerm_key_vault" "tfvars" {
   resource_group_name = var.storage_resource_group_name
 }
 
-# --- Client Config ---
+# --- Client Config (for role assignments) ---
 data "azurerm_client_config" "current" {}
 
 # --- ACR Lookup ---
@@ -19,10 +19,9 @@ data "azurerm_container_registry" "acr" {
   resource_group_name = var.storage_resource_group_name
 }
 
-data "azurerm_container_registry_credentials" "acr_creds" {
-  name                = data.azurerm_container_registry.acr.name
-  resource_group_name = data.azurerm_container_registry.acr.resource_group_name
-}
+# --- ACR Credentials ---
+variable "acr_username" {}
+variable "acr_password" {}
 
 resource "azurerm_resource_provider_registration" "container_apps" {
   name = "Microsoft.App"
@@ -111,15 +110,13 @@ resource "azurerm_container_app" "backend" {
 
   registry {
     server   = data.azurerm_container_registry.acr.login_server
-    username = data.azurerm_container_registry_credentials.acr_creds.username
-    password_secret_ref {
-      name = "acr-password"
-    }
+    username = var.acr_username
+    password_secret_name = "acr-password"
   }
 
   secret {
     name  = "acr-password"
-    value = data.azurerm_container_registry_credentials.acr_creds.passwords[0].value
+    value = var.acr_password
   }
 
   secret {
@@ -194,15 +191,13 @@ resource "azurerm_container_app" "db" {
 
   registry {
     server   = data.azurerm_container_registry.acr.login_server
-    username = data.azurerm_container_registry_credentials.acr_creds.username
-    password_secret_ref {
-      name = "acr-password"
-    }
+    username = var.acr_username
+    password_secret_name = "acr-password"
   }
 
   secret {
     name  = "acr-password"
-    value = data.azurerm_container_registry_credentials.acr_creds.passwords[0].value
+    value = var.acr_password
   }
 
   secret {
@@ -250,15 +245,13 @@ resource "azurerm_container_app" "frontend" {
 
   registry {
     server   = data.azurerm_container_registry.acr.login_server
-    username = data.azurerm_container_registry_credentials.acr_creds.username
-    password_secret_ref {
-      name = "acr-password"
-    }
+    username = var.acr_username
+    password_secret_name = "acr-password"
   }
 
   secret {
     name  = "acr-password"
-    value = data.azurerm_container_registry_credentials.acr_creds.passwords[0].value
+    value = var.acr_password
   }
 
   template {

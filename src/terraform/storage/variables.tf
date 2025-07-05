@@ -67,3 +67,12 @@ variable "acr_name" {
   type        = string
   default     = "arlinddevacr"
 }
+
+variable "acr_username" {
+  description = "ACR admin username"
+}
+
+variable "acr_password" {
+  description = "ACR admin password"
+  sensitive   = true
+}

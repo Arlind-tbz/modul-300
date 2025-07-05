@@ -85,3 +85,15 @@ resource "azurerm_container_registry" "acr" {
   sku                 = "Basic"
   admin_enabled       = true
 }
+
+resource "azurerm_key_vault_secret" "acr_username" {
+  name         = "acr-username"
+  value        = var.acr_username
+  key_vault_id = azurerm_key_vault.tfvars.id
+}
+
+resource "azurerm_key_vault_secret" "acr_password" {
+  name         = "acr-password"
+  value        = var.acr_password
+  key_vault_id = azurerm_key_vault.tfvars.id
+}
