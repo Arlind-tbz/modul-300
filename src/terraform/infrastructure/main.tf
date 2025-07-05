@@ -4,7 +4,7 @@ provider "azurerm" {
   tenant_id       = var.tenant_id
 }
 
-# --- Key Vault Lookup (for secret integration) ---
+# --- Key Vault Lookup ---
 data "azurerm_key_vault" "tfvars" {
   name                = var.key_vault_name
   resource_group_name = var.storage_resource_group_name
@@ -23,7 +23,6 @@ data "azurerm_container_registry" "acr" {
 resource "azurerm_storage_account" "db_storage" {
   name                     = "dbstorage${var.project_name}"
   resource_group_name      = azurerm_resource_group.infra_rg.name
-  location                 = var.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
 }
@@ -67,7 +66,6 @@ resource "azurerm_subnet" "subnet" {
 # --- Container App Environment ---
 resource "azurerm_container_app_environment" "env" {
   name                 = "${var.project_name}-env"
-  location             = var.location
   resource_group_name  = azurerm_resource_group.infra_rg.name
 }
 
@@ -76,7 +74,6 @@ resource "azurerm_container_app" "db" {
   name                          = "${var.project_name}-db"
   container_app_environment_id = azurerm_container_app_environment.env.id
   resource_group_name           = azurerm_resource_group.infra_rg.name
-  location                      = var.location
   revision_mode                 = "Single"
 
   identity {
@@ -117,10 +114,11 @@ resource "azurerm_container_app" "db" {
       }
 
       volume_mounts {
-        name = "dbvolume"
+        name = azurerm_container_app_environment_storage.db_volume.name
         path = "/var/lib/mysql"
       }
     }
+  }
 
     volume {
       name = "dbvolume"
@@ -138,7 +136,6 @@ resource "azurerm_container_app" "backend" {
   name                          = "${var.project_name}-backend"
   container_app_environment_id = azurerm_container_app_environment.env.id
   resource_group_name           = azurerm_resource_group.infra_rg.name
-  location                      = var.location
   revision_mode                 = "Single"
 
   identity {
@@ -155,7 +152,6 @@ resource "azurerm_container_app" "backend" {
       latest_revision = true
     }
   }
-
 
   registry {
     server   = data.azurerm_container_registry.acr.login_server
@@ -179,19 +175,19 @@ resource "azurerm_container_app" "backend" {
         value = "db"
       }
       env {
-        name  = "MYSQL_USER"
+        name        = "MYSQL_USER"
         secret_name = "mysql_user"
       }
       env {
-        name  = "MYSQL_PASSWORD"
+        name        = "MYSQL_PASSWORD"
         secret_name = "mysql-password"
       }
       env {
-        name  = "MYSQL_ROOT_PASSWORD"
+        name        = "MYSQL_ROOT_PASSWORD"
         secret_name = "mysql-root-password"
       }
       env {
-        name  = "MYSQL_DATABASE"
+        name        = "MYSQL_DATABASE"
         secret_name = "mysql_database"
       }
     }
@@ -203,7 +199,6 @@ resource "azurerm_container_app" "frontend" {
   name                          = "${var.project_name}-frontend"
   container_app_environment_id = azurerm_container_app_environment.env.id
   resource_group_name           = azurerm_resource_group.infra_rg.name
-  location                      = var.location
   revision_mode                 = "Single"
 
   identity {
@@ -221,7 +216,6 @@ resource "azurerm_container_app" "frontend" {
     }
   }
 
-
   registry {
     server   = data.azurerm_container_registry.acr.login_server
     identity = "SystemAssigned"
@@ -237,7 +231,7 @@ resource "azurerm_container_app" "frontend" {
   }
 }
 
-# --- Role Assignments ---
+# --- Role Assignments for ACR Pull ---
 resource "azurerm_role_assignment" "acr_pull_frontend" {
   scope                = data.azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
