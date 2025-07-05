@@ -53,23 +53,42 @@ resource "azurerm_subnet" "subnet" {
   }
 }
 
+# --- User Assigned Identities ---
+resource "azurerm_user_assigned_identity" "frontend_identity" {
+  name                = "${var.project_name}-frontend-id"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.infra_rg.name
+}
+
+resource "azurerm_user_assigned_identity" "backend_identity" {
+  name                = "${var.project_name}-backend-id"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.infra_rg.name
+}
+
+resource "azurerm_user_assigned_identity" "db_identity" {
+  name                = "${var.project_name}-db-id"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.infra_rg.name
+}
+
 # --- Role Assignments for ACR Pull ---
 resource "azurerm_role_assignment" "acr_pull_frontend" {
   scope                = data.azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
-  principal_id         = azurerm_container_app.frontend.identity[0].principal_id
+  principal_id         = azurerm_user_assigned_identity.frontend_identity.principal_id
 }
 
 resource "azurerm_role_assignment" "acr_pull_backend" {
   scope                = data.azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
-  principal_id         = azurerm_container_app.backend.identity[0].principal_id
+  principal_id         = azurerm_user_assigned_identity.backend_identity.principal_id
 }
 
 resource "azurerm_role_assignment" "acr_pull_db" {
   scope                = data.azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
-  principal_id         = azurerm_container_app.db.identity[0].principal_id
+  principal_id         = azurerm_user_assigned_identity.db_identity.principal_id
 }
 
 # --- Container App Environment ---
@@ -89,7 +108,8 @@ resource "azurerm_container_app" "backend" {
   revision_mode                 = "Single"
 
   identity {
-    type = "SystemAssigned"
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.backend_identity.id]
   }
 
   ingress {
@@ -104,7 +124,8 @@ resource "azurerm_container_app" "backend" {
   }
 
   registry {
-    server = data.azurerm_container_registry.acr.login_server
+    server   = data.azurerm_container_registry.acr.login_server
+    identity = azurerm_user_assigned_identity.backend_identity.id
   }
 
   secret {
@@ -164,7 +185,8 @@ resource "azurerm_container_app" "db" {
   revision_mode                 = "Single"
 
   identity {
-    type = "SystemAssigned"
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.db_identity.id]
   }
 
   ingress {
@@ -179,7 +201,8 @@ resource "azurerm_container_app" "db" {
   }
 
   registry {
-    server = data.azurerm_container_registry.acr.login_server
+    server   = data.azurerm_container_registry.acr.login_server
+    identity = azurerm_user_assigned_identity.db_identity.id
   }
 
   secret {
@@ -212,7 +235,8 @@ resource "azurerm_container_app" "frontend" {
   revision_mode                 = "Single"
 
   identity {
-    type = "SystemAssigned"
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.frontend_identity.id]
   }
 
   ingress {
@@ -227,7 +251,8 @@ resource "azurerm_container_app" "frontend" {
   }
 
   registry {
-    server = data.azurerm_container_registry.acr.login_server
+    server   = data.azurerm_container_registry.acr.login_server
+    identity = azurerm_user_assigned_identity.frontend_identity.id
   }
 
   template {
