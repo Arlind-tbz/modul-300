@@ -62,8 +62,9 @@ resource "azurerm_container_app_environment" "env" {
   depends_on = [azurerm_resource_provider_registration.container_apps]
 }
 
-resource "azurerm_container_app" "db" {
-  name                          = "${var.project_name}-db"
+# --- Backend Container App ---
+resource "azurerm_container_app" "backend" {
+  name                          = "${var.project_name}-backend"
   container_app_environment_id = azurerm_container_app_environment.env.id
   resource_group_name           = azurerm_resource_group.infra_rg.name
   revision_mode                 = "Single"
@@ -74,7 +75,7 @@ resource "azurerm_container_app" "db" {
 
   ingress {
     external_enabled = false
-    target_port      = 5432
+    target_port      = 5000
     transport        = "auto"
 
     traffic_weight {
@@ -89,26 +90,62 @@ resource "azurerm_container_app" "db" {
   }
 
   secret {
+    name  = "mysql_user"
+    value = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.tfvars.name};SecretName=mysql-user)"
+  }
+
+  secret {
+    name  = "mysql_database"
+    value = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.tfvars.name};SecretName=mysql-database)"
+  }
+
+  secret {
+    name  = "mysql_password"
+    value = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.tfvars.name};SecretName=mysql-password)"
+  }
+
+  secret {
     name  = "mysql_root_password"
     value = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.tfvars.name};SecretName=mysql_root_password)"
   }
 
+  env {
+    name  = "MYSQL_HOST"
+    value = "db"
+  }
+
   template {
     container {
-      name   = "db"
-      image  = "${data.azurerm_container_registry.acr.login_server}/db:latest"
+      name   = "backend"
+      image  = "${data.azurerm_container_registry.acr.login_server}/backend:latest"
       cpu    = 0.5
       memory = "1.0Gi"
 
       env {
+        name  = "MYSQL_HOST"
+        value = "db"
+      }
+      env {
+        name        = "MYSQL_USER"
+        secret_name = "mysql_user"
+      }
+      env {
+        name        = "MYSQL_PASSWORD"
+        secret_name = "mysql_password"
+      }
+      env {
         name        = "MYSQL_ROOT_PASSWORD"
         secret_name = "mysql_root_password"
+      }
+      env {
+        name        = "MYSQL_DATABASE"
+        secret_name = "mysql_database"
       }
     }
   }
 }
 
-# --- Backend Container App ---
+# --- DB Container App ---
 resource "azurerm_container_app" "db" {
   name                          = "${var.project_name}-db"
   container_app_environment_id = azurerm_container_app_environment.env.id
