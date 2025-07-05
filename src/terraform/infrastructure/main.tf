@@ -116,7 +116,7 @@ resource "azurerm_container_app" "db" {
       }
 
       volume_mounts {
-        name = azurerm_container_app_environment_storage.db_volume.name
+        name = "dbvolume"
         path = "/var/lib/mysql"
       }
     }
