@@ -40,25 +40,30 @@ resource "azurerm_key_vault" "tfvars" {
   }
 }
 
-# SSH public key stored as secret
-resource "azurerm_key_vault_secret" "ssh_public_key" {
-  name         = "ssh-public-key"
-  value        = var.ssh_public_key
+resource "azurerm_key_vault_secret" "mysql_root_password" {
+  name         = "mysql-root-password"
+  value        = var.mysql_root_password
   key_vault_id = azurerm_key_vault.tfvars.id
 }
 
-# Startup script stored as secret
-resource "azurerm_key_vault_secret" "startup_script" {
-  name         = "startup-script"
-  value        = var.startup_script
+resource "azurerm_key_vault_secret" "mysql_user" {
+  name         = "mysql-user"
+  value        = var.mysql_user
   key_vault_id = azurerm_key_vault.tfvars.id
-
-  lifecycle {
-    ignore_changes = [value]
-  }
 }
 
-# Storage Account for remote tfstate backend
+resource "azurerm_key_vault_secret" "mysql_password" {
+  name         = "mysql-password"
+  value        = var.mysql_password
+  key_vault_id = azurerm_key_vault.tfvars.id
+}
+
+resource "azurerm_key_vault_secret" "mysql_database" {
+  name         = "mysql-database"
+  value        = var.mysql_database
+  key_vault_id = azurerm_key_vault.tfvars.id
+}
+
 resource "azurerm_storage_account" "tfstate" {
   name                     = var.storage_account_name
   resource_group_name      = azurerm_resource_group.storage_rg.name
@@ -67,7 +72,6 @@ resource "azurerm_storage_account" "tfstate" {
   account_replication_type = "LRS"
 }
 
-# Storage Container to hold tfstate
 resource "azurerm_storage_container" "tfstate" {
   name                  = var.storage_container_name
   storage_account_id    = azurerm_storage_account.tfstate.id

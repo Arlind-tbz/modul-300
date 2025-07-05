@@ -24,21 +24,30 @@ variable "tenant_id" {
   type        = string
 }
 
-variable "ssh_public_key" {
-  description = "Your SSH public key"
+variable "mysql_root_password" {
+  description = "Root password for MySQL"
   type        = string
   sensitive   = true
 }
 
-variable "startup_script" {
-  description = "cloud-init startup script"
+variable "mysql_user" {
+  description = "Username for MySQL"
+  type        = string
+  default     = "root"
+  sensitive   = true
+}
+
+variable "mysql_password" {
+  description = "Password for MySQL user"
   type        = string
   sensitive   = true
-  default     = <<-EOT
-    #!/bin/bash
-    apt-get update
-    apt-get upgrade
-  EOT
+}
+
+variable "mysql_database" {
+  description = "Database name for MySQL"
+  type        = string
+  default     = "todo_db"
+  sensitive   = true
 }
 
 variable "storage_account_name" {

@@ -55,3 +55,21 @@ variable "tenant_id" {
   description = "Azure tenant ID"
   type        = string
 }
+
+variable "acr_name" {
+  description = "Globally unique name for Azure Container Registry"
+  type        = string
+  default     = "arlinddevacr"
+}
+
+variable "acr_resource_group" {
+  description = "Resource group name where the ACR is located"
+  type        = string
+  default     = "terraform-storage-rg"
+}
+
+variable "project_name" {
+  description = "Prefix used for naming resources"
+  type        = string
+  default     = "arlindapp"
+}
