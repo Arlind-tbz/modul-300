@@ -187,7 +187,7 @@ resource "azurerm_container_app" "db" {
 
   ingress {
     external_enabled = false
-    target_port      = 5432
+    target_port      = 3306
     transport        = "auto"
 
     traffic_weight {
@@ -241,7 +241,7 @@ resource "azurerm_container_app" "frontend" {
 
   ingress {
     external_enabled = true
-    target_port      = 80
+    target_port      = 8080
     transport        = "auto"
 
     traffic_weight {
