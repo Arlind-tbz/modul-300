@@ -86,14 +86,14 @@ resource "azurerm_container_registry" "acr" {
   admin_enabled       = true
 }
 
-resource "azurerm_key_vault_secret" "acr_username" {
-  name         = "acr-username"
-  value        = var.acr_username
+resource "azurerm_key_vault_secret" "acr_password" {
+  name         = "acr-password"
+  value        = azurerm_container_registry.acr.admin_password
   key_vault_id = azurerm_key_vault.tfvars.id
 }
 
-resource "azurerm_key_vault_secret" "acr_password" {
-  name         = "acr-password"
-  value        = var.acr_password
+resource "azurerm_key_vault_secret" "acr_username" {
+  name         = "acr-username"
+  value        = azurerm_container_registry.acr.admin_username
   key_vault_id = azurerm_key_vault.tfvars.id
 }
