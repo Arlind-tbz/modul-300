@@ -19,6 +19,10 @@ data "azurerm_container_registry" "acr" {
   resource_group_name = var.storage_resource_group_name
 }
 
+resource "azurerm_resource_provider_registration" "container_apps" {
+  name = "Microsoft.App"
+}
+
 # --- Storage Account & Blob Container for DB Volumes ---
 resource "azurerm_storage_account" "db_storage" {
   name                     = "dbstorage${var.project_name}"
@@ -29,9 +33,9 @@ resource "azurerm_storage_account" "db_storage" {
 }
 
 resource "azurerm_storage_share" "db_share" {
-  name                 = "db-volume"
-  storage_account_name = azurerm_storage_account.db_storage.name
-  quota                = 5
+  name                = "db-volume"
+  storage_account_id  = azurerm_storage_account.db_storage.id
+  quota               = 5
 }
 
 # --- Resource Group ---
@@ -69,6 +73,8 @@ resource "azurerm_container_app_environment" "env" {
   name                 = "${var.project_name}-env"
   location             = var.location
   resource_group_name  = azurerm_resource_group.infra_rg.name
+
+  depends_on = [azurerm_resource_provider_registration.container_apps]
 }
 
 # --- DB Container App (with Azure File volume and secrets) ---

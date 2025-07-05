@@ -47,3 +47,4 @@ Terraform habe ich mit winget installiert:
 ```powershell
 winget install hashicorp.terraform
 ```
+az provider register --namespace Microsoft.App
