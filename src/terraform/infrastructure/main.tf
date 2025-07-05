@@ -10,13 +10,18 @@ data "azurerm_key_vault" "tfvars" {
   resource_group_name = var.storage_resource_group_name
 }
 
-# --- Client Config (for role assignments) ---
+# --- Client Config ---
 data "azurerm_client_config" "current" {}
 
 # --- ACR Lookup ---
 data "azurerm_container_registry" "acr" {
   name                = var.acr_name
   resource_group_name = var.storage_resource_group_name
+}
+
+data "azurerm_container_registry_credentials" "acr_creds" {
+  name                = data.azurerm_container_registry.acr.name
+  resource_group_name = data.azurerm_container_registry.acr.resource_group_name
 }
 
 resource "azurerm_resource_provider_registration" "container_apps" {
@@ -53,13 +58,6 @@ resource "azurerm_subnet" "subnet" {
   }
 }
 
-# --- Grant Terraform Client Role to Assign ACR Permissions ---
-resource "azurerm_role_assignment" "acr_admin_for_terraform" {
-  scope                = data.azurerm_container_registry.acr.id
-  role_definition_name = "User Access Administrator"
-  principal_id         = data.azurerm_client_config.current.object_id
-}
-
 # --- User Assigned Identities ---
 resource "azurerm_user_assigned_identity" "frontend_identity" {
   name                = "${var.project_name}-frontend-id"
@@ -77,28 +75,6 @@ resource "azurerm_user_assigned_identity" "db_identity" {
   name                = "${var.project_name}-db-id"
   location            = var.location
   resource_group_name = azurerm_resource_group.infra_rg.name
-}
-
-# --- Role Assignments for ACR Pull ---
-resource "azurerm_role_assignment" "acr_pull_frontend" {
-  scope                = data.azurerm_container_registry.acr.id
-  role_definition_name = "AcrPull"
-  principal_id         = azurerm_user_assigned_identity.frontend_identity.principal_id
-  depends_on           = [azurerm_role_assignment.acr_admin_for_terraform]
-}
-
-resource "azurerm_role_assignment" "acr_pull_backend" {
-  scope                = data.azurerm_container_registry.acr.id
-  role_definition_name = "AcrPull"
-  principal_id         = azurerm_user_assigned_identity.backend_identity.principal_id
-  depends_on           = [azurerm_role_assignment.acr_admin_for_terraform]
-}
-
-resource "azurerm_role_assignment" "acr_pull_db" {
-  scope                = data.azurerm_container_registry.acr.id
-  role_definition_name = "AcrPull"
-  principal_id         = azurerm_user_assigned_identity.db_identity.principal_id
-  depends_on           = [azurerm_role_assignment.acr_admin_for_terraform]
 }
 
 # --- Container App Environment ---
@@ -135,7 +111,15 @@ resource "azurerm_container_app" "backend" {
 
   registry {
     server   = data.azurerm_container_registry.acr.login_server
-    identity = azurerm_user_assigned_identity.backend_identity.id
+    username = data.azurerm_container_registry_credentials.acr_creds.username
+    password_secret_ref {
+      name = "acr-password"
+    }
+  }
+
+  secret {
+    name  = "acr-password"
+    value = data.azurerm_container_registry_credentials.acr_creds.passwords[0].value
   }
 
   secret {
@@ -183,8 +167,6 @@ resource "azurerm_container_app" "backend" {
       }
     }
   }
-
-  depends_on = [azurerm_role_assignment.acr_pull_backend]
 }
 
 # --- DB Container App ---
@@ -212,7 +194,15 @@ resource "azurerm_container_app" "db" {
 
   registry {
     server   = data.azurerm_container_registry.acr.login_server
-    identity = azurerm_user_assigned_identity.db_identity.id
+    username = data.azurerm_container_registry_credentials.acr_creds.username
+    password_secret_ref {
+      name = "acr-password"
+    }
+  }
+
+  secret {
+    name  = "acr-password"
+    value = data.azurerm_container_registry_credentials.acr_creds.passwords[0].value
   }
 
   secret {
@@ -233,8 +223,6 @@ resource "azurerm_container_app" "db" {
       }
     }
   }
-
-  depends_on = [azurerm_role_assignment.acr_pull_db]
 }
 
 # --- Frontend Container App ---
@@ -262,7 +250,15 @@ resource "azurerm_container_app" "frontend" {
 
   registry {
     server   = data.azurerm_container_registry.acr.login_server
-    identity = azurerm_user_assigned_identity.frontend_identity.id
+    username = data.azurerm_container_registry_credentials.acr_creds.username
+    password_secret_ref {
+      name = "acr-password"
+    }
+  }
+
+  secret {
+    name  = "acr-password"
+    value = data.azurerm_container_registry_credentials.acr_creds.passwords[0].value
   }
 
   template {
@@ -273,6 +269,4 @@ resource "azurerm_container_app" "frontend" {
       memory = "1.0Gi"
     }
   }
-
-  depends_on = [azurerm_role_assignment.acr_pull_frontend]
 }

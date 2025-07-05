@@ -4,275 +4,84 @@ provider "azurerm" {
   tenant_id       = var.tenant_id
 }
 
-# --- Key Vault Lookup ---
-data "azurerm_key_vault" "tfvars" {
-  name                = var.key_vault_name
-  resource_group_name = var.storage_resource_group_name
-}
-
-# --- Client Config (for role assignments) ---
+# Data source to get current client config
 data "azurerm_client_config" "current" {}
 
-# --- ACR Lookup ---
-data "azurerm_container_registry" "acr" {
-  name                = var.acr_name
-  resource_group_name = var.storage_resource_group_name
-}
-
-resource "azurerm_resource_provider_registration" "container_apps" {
-  name = "Microsoft.App"
-}
-
-# --- Resource Group ---
-resource "azurerm_resource_group" "infra_rg" {
+# Create dedicated resource group for storage
+resource "azurerm_resource_group" "storage_rg" {
   name     = var.resource_group_name
   location = var.location
 }
 
-# --- Virtual Network & Subnet ---
-resource "azurerm_virtual_network" "vnet" {
-  name                = var.vnet_name
-  address_space       = ["10.0.0.0/16"]
-  location            = var.location
-  resource_group_name = azurerm_resource_group.infra_rg.name
-}
+# Key Vault for storing sensitive tfvars
+resource "azurerm_key_vault" "tfvars" {
+  name                = var.key_vault_name
+  location            = azurerm_resource_group.storage_rg.location
+  resource_group_name = azurerm_resource_group.storage_rg.name
+  tenant_id           = data.azurerm_client_config.current.tenant_id
+  sku_name            = "standard"
 
-resource "azurerm_subnet" "subnet" {
-  name                 = var.subnet_name
-  resource_group_name  = azurerm_resource_group.infra_rg.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes     = ["10.0.1.0/24"]
+  # Disable purge protection for easier management
+  purge_protection_enabled   = false
+  soft_delete_retention_days = 7
 
-  delegation {
-    name = "delegation"
+  access_policy {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = data.azurerm_client_config.current.object_id
 
-    service_delegation {
-      name    = "Microsoft.App/environments"
-      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
-    }
+    secret_permissions = [
+      "Get",
+      "List",
+      "Set",
+      "Delete",
+      "Purge",
+      "Recover"
+    ]
   }
 }
 
-# --- Grant Terraform Client Role to Assign ACR Permissions ---
-resource "azurerm_role_assignment" "acr_admin_for_terraform" {
-  scope                = data.azurerm_container_registry.acr.id
-  role_definition_name = "User Access Administrator"
-  principal_id         = data.azurerm_client_config.current.object_id
+resource "azurerm_key_vault_secret" "mysql_root_password" {
+  name         = "mysql-root-password"
+  value        = var.mysql_root_password
+  key_vault_id = azurerm_key_vault.tfvars.id
 }
 
-# --- User Assigned Identities ---
-resource "azurerm_user_assigned_identity" "frontend_identity" {
-  name                = "${var.project_name}-frontend-id"
-  location            = var.location
-  resource_group_name = azurerm_resource_group.infra_rg.name
+resource "azurerm_key_vault_secret" "mysql_user" {
+  name         = "mysql-user"
+  value        = var.mysql_user
+  key_vault_id = azurerm_key_vault.tfvars.id
 }
 
-resource "azurerm_user_assigned_identity" "backend_identity" {
-  name                = "${var.project_name}-backend-id"
-  location            = var.location
-  resource_group_name = azurerm_resource_group.infra_rg.name
+resource "azurerm_key_vault_secret" "mysql_password" {
+  name         = "mysql-password"
+  value        = var.mysql_password
+  key_vault_id = azurerm_key_vault.tfvars.id
 }
 
-resource "azurerm_user_assigned_identity" "db_identity" {
-  name                = "${var.project_name}-db-id"
-  location            = var.location
-  resource_group_name = azurerm_resource_group.infra_rg.name
+resource "azurerm_key_vault_secret" "mysql_database" {
+  name         = "mysql-database"
+  value        = var.mysql_database
+  key_vault_id = azurerm_key_vault.tfvars.id
 }
 
-# --- Role Assignments for ACR Pull ---
-resource "azurerm_role_assignment" "acr_pull_frontend" {
-  scope                = data.azurerm_container_registry.acr.id
-  role_definition_name = "AcrPull"
-  principal_id         = azurerm_user_assigned_identity.frontend_identity.principal_id
-  depends_on           = [azurerm_role_assignment.acr_admin_for_terraform]
+resource "azurerm_storage_account" "tfstate" {
+  name                     = var.storage_account_name
+  resource_group_name      = azurerm_resource_group.storage_rg.name
+  location                 = azurerm_resource_group.storage_rg.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
 }
 
-resource "azurerm_role_assignment" "acr_pull_backend" {
-  scope                = data.azurerm_container_registry.acr.id
-  role_definition_name = "AcrPull"
-  principal_id         = azurerm_user_assigned_identity.backend_identity.principal_id
-  depends_on           = [azurerm_role_assignment.acr_admin_for_terraform]
+resource "azurerm_storage_container" "tfstate" {
+  name                  = var.storage_container_name
+  storage_account_id    = azurerm_storage_account.tfstate.id
+  container_access_type = "private"
 }
 
-resource "azurerm_role_assignment" "acr_pull_db" {
-  scope                = data.azurerm_container_registry.acr.id
-  role_definition_name = "AcrPull"
-  principal_id         = azurerm_user_assigned_identity.db_identity.principal_id
-  depends_on           = [azurerm_role_assignment.acr_admin_for_terraform]
-}
-
-# --- Container App Environment ---
-resource "azurerm_container_app_environment" "env" {
-  name                 = "${var.project_name}-env"
-  location             = var.location
-  resource_group_name  = azurerm_resource_group.infra_rg.name
-
-  depends_on = [azurerm_resource_provider_registration.container_apps]
-}
-
-# --- Backend Container App ---
-resource "azurerm_container_app" "backend" {
-  name                          = "${var.project_name}-backend"
-  container_app_environment_id = azurerm_container_app_environment.env.id
-  resource_group_name           = azurerm_resource_group.infra_rg.name
-  revision_mode                 = "Single"
-
-  identity {
-    type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.backend_identity.id]
-  }
-
-  ingress {
-    external_enabled = false
-    target_port      = 5000
-    transport        = "auto"
-
-    traffic_weight {
-      percentage      = 100
-      latest_revision = true
-    }
-  }
-
-  registry {
-    server   = data.azurerm_container_registry.acr.login_server
-    identity = azurerm_user_assigned_identity.backend_identity.id
-  }
-
-  secret {
-    name  = "mysql-user"
-    value = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.tfvars.name};SecretName=mysql-user)"
-  }
-
-  secret {
-    name  = "mysql-database"
-    value = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.tfvars.name};SecretName=mysql-database)"
-  }
-
-  secret {
-    name  = "mysql-password"
-    value = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.tfvars.name};SecretName=mysql-password)"
-  }
-
-  secret {
-    name  = "mysql-root-password"
-    value = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.tfvars.name};SecretName=mysql-root-password)"
-  }
-
-  template {
-    container {
-      name   = "backend"
-      image  = "${data.azurerm_container_registry.acr.login_server}/backend:latest"
-      cpu    = 0.5
-      memory = "1.0Gi"
-
-      env {
-        name        = "MYSQL_USER"
-        secret_name = "mysql-user"
-      }
-      env {
-        name        = "MYSQL_PASSWORD"
-        secret_name = "mysql-password"
-      }
-      env {
-        name        = "MYSQL_ROOT_PASSWORD"
-        secret_name = "mysql-root-password"
-      }
-      env {
-        name        = "MYSQL_DATABASE"
-        secret_name = "mysql-database"
-      }
-    }
-  }
-
-  depends_on = [azurerm_role_assignment.acr_pull_backend]
-}
-
-# --- DB Container App ---
-resource "azurerm_container_app" "db" {
-  name                          = "${var.project_name}-db"
-  container_app_environment_id = azurerm_container_app_environment.env.id
-  resource_group_name           = azurerm_resource_group.infra_rg.name
-  revision_mode                 = "Single"
-
-  identity {
-    type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.db_identity.id]
-  }
-
-  ingress {
-    external_enabled = false
-    target_port      = 5432
-    transport        = "auto"
-
-    traffic_weight {
-      percentage      = 100
-      latest_revision = true
-    }
-  }
-
-  registry {
-    server   = data.azurerm_container_registry.acr.login_server
-    identity = azurerm_user_assigned_identity.db_identity.id
-  }
-
-  secret {
-    name  = "mysql-root-password"
-    value = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.tfvars.name};SecretName=mysql-root-password)"
-  }
-
-  template {
-    container {
-      name   = "db"
-      image  = "${data.azurerm_container_registry.acr.login_server}/db:latest"
-      cpu    = 0.5
-      memory = "1.0Gi"
-
-      env {
-        name        = "MYSQL_ROOT_PASSWORD"
-        secret_name = "mysql-root-password"
-      }
-    }
-  }
-
-  depends_on = [azurerm_role_assignment.acr_pull_db]
-}
-
-# --- Frontend Container App ---
-resource "azurerm_container_app" "frontend" {
-  name                          = "${var.project_name}-frontend"
-  container_app_environment_id = azurerm_container_app_environment.env.id
-  resource_group_name           = azurerm_resource_group.infra_rg.name
-  revision_mode                 = "Single"
-
-  identity {
-    type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.frontend_identity.id]
-  }
-
-  ingress {
-    external_enabled = true
-    target_port      = 80
-    transport        = "auto"
-
-    traffic_weight {
-      percentage      = 100
-      latest_revision = true
-    }
-  }
-
-  registry {
-    server   = data.azurerm_container_registry.acr.login_server
-    identity = azurerm_user_assigned_identity.frontend_identity.id
-  }
-
-  template {
-    container {
-      name   = "frontend"
-      image  = "${data.azurerm_container_registry.acr.login_server}/frontend:latest"
-      cpu    = 0.5
-      memory = "1.0Gi"
-    }
-  }
-
-  depends_on = [azurerm_role_assignment.acr_pull_frontend]
+resource "azurerm_container_registry" "acr" {
+  name                = var.acr_name
+  resource_group_name = azurerm_resource_group.storage_rg.name
+  location            = azurerm_resource_group.storage_rg.location
+  sku                 = "Basic"
+  admin_enabled       = true
 }
