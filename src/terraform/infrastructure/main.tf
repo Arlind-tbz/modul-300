@@ -19,6 +19,14 @@ data "azurerm_container_registry" "acr" {
   resource_group_name = var.storage_resource_group_name
 }
 
+resource "azurerm_log_analytics_workspace" "log" {
+  name                = "${var.project_name}-log"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.infra_rg.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+}
+
 # --- ACR Credentials from Key Vault ---
 data "azurerm_key_vault_secret" "acr_username" {
   name         = "acr-username"
@@ -77,17 +85,15 @@ resource "azurerm_user_assigned_identity" "backend_identity" {
   resource_group_name = azurerm_resource_group.infra_rg.name
 }
 
-resource "azurerm_user_assigned_identity" "db_identity" {
-  name                = "${var.project_name}-db-id"
-  location            = var.location
-  resource_group_name = azurerm_resource_group.infra_rg.name
-}
-
-# --- Container App Environment ---
 resource "azurerm_container_app_environment" "env" {
-  name                = "${var.project_name}-env"
-  location            = var.location
-  resource_group_name = azurerm_resource_group.infra_rg.name
+  name                 = "${var.project_name}-env"
+  location             = var.location
+  resource_group_name  = azurerm_resource_group.infra_rg.name
+
+  log_analytics_configuration {
+    customer_id = azurerm_log_analytics_workspace.log.customer_id
+    shared_key  = azurerm_log_analytics_workspace.log.primary_shared_key
+  }
 
   depends_on = [azurerm_resource_provider_registration.container_apps]
 }
