@@ -154,6 +154,11 @@ resource "azurerm_container_app" "backend" {
       memory = "1.0Gi"
 
       env {
+        name  = "MYSQL_HOST"
+        value = "${var.project_name}-db.internal"
+      }
+
+      env {
         name        = "MYSQL_USER"
         secret_name = "mysql-user"
       }
@@ -267,6 +272,11 @@ resource "azurerm_container_app" "frontend" {
       image  = "${data.azurerm_container_registry.acr.login_server}/frontend:latest"
       cpu    = 0.5
       memory = "1.0Gi"
+
+      env {
+        name  = "BACKEND_HOST"
+        value = "${var.project_name}-backend.internal"
+      }
     }
   }
 }

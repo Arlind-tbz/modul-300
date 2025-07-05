@@ -4,7 +4,8 @@ import os
 import time
 
 app = Flask(__name__)
-BACKEND_API = os.environ.get("BACKEND_API", "http://backend:5000/api")
+BACKEND_HOST = os.getenv("BACKEND_HOST", "backend")
+BACKEND_API = f"http://{BACKEND_HOST}:5000/api"
 
 def get_with_retries(endpoint, retries=3, delay=2):
     for attempt in range(retries):

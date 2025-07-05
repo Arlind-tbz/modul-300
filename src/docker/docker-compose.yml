@@ -28,6 +28,8 @@ services:
   frontend:
     build: ./frontend
     container_name: frontend
+    environment:
+      BACKEND_HOST: backend
     networks:
       - todo_app
     restart: unless-stopped
