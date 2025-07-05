@@ -109,11 +109,6 @@ resource "azurerm_container_app" "backend" {
     value = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.tfvars.name};SecretName=mysql_root_password)"
   }
 
-  env {
-    name  = "MYSQL_HOST"
-    value = "db"
-  }
-
   template {
     container {
       name   = "backend"
