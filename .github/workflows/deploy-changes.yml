@@ -12,15 +12,6 @@ on:
 permissions:
   contents: write
 
-env:
-  ARM_SUBSCRIPTION_ID:  ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-  ARM_CLIENT_ID:        ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
-  ARM_CLIENT_SECRET:    ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
-  ARM_TENANT_ID:        ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
-  ACR_NAME:             arlinddevacr
-  ACR_LOGIN_SERVER:     arlinddevacr.azurecr.io
-  STORAGE_RG_NAME:      terraform-storage-rg
-  STORAGE_ACCOUNT_NAME: tfstatearlindsulejmani
 jobs:
   deploy-backend:
     name: Deploy Backend
@@ -42,44 +33,95 @@ jobs:
         working-directory: ./src/terraform/storage
         run: terraform init
 
-      - name: Terraform Import Resources
+      - name: Mask Secrets
+        run: |
+          echo "::add-mask::${{ secrets.SSH_PUBLIC_KEY }}"
+
+      - name: Import Resource Group
         working-directory: ./src/terraform/storage
+        env:
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+          STORAGE_RG_NAME: terraform-storage-rg
         run: |
           terraform import \
-            -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
-            -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
-            -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
+            -var "ssh_public_key=$SSH_PUBLIC_KEY" \
+            -var "subscription_id=$SUBSCRIPTION_ID" \
+            -var "tenant_id=$TENANT_ID" \
             azurerm_resource_group.storage_rg \
-            "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.STORAGE_RG_NAME }}" || echo "Resource group not found"
+            "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$STORAGE_RG_NAME" || echo "Resource group not found"
 
+      - name: Import ACR
+        working-directory: ./src/terraform/storage
+        env:
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+          STORAGE_RG_NAME: terraform-storage-rg
+          ACR_NAME: arlinddevacr
+        run: |
           terraform import \
-            -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
-            -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
-            -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
+            -var "ssh_public_key=$SSH_PUBLIC_KEY" \
+            -var "subscription_id=$SUBSCRIPTION_ID" \
+            -var "tenant_id=$TENANT_ID" \
             azurerm_container_registry.acr \
-            "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.STORAGE_RG_NAME }}/providers/Microsoft.ContainerRegistry/registries/${{ env.ACR_NAME }}" || echo "ACR not found"
+            "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$STORAGE_RG_NAME/providers/Microsoft.ContainerRegistry/registries/$ACR_NAME" || echo "ACR not found"
 
+      - name: Import Storage Account
+        working-directory: ./src/terraform/storage
+        env:
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+          STORAGE_RG_NAME: terraform-storage-rg
+          STORAGE_ACCOUNT_NAME: tfstatearlindsulejmani
+        run: |
           terraform import \
-            -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
-            -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
-            -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
+            -var "ssh_public_key=$SSH_PUBLIC_KEY" \
+            -var "subscription_id=$SUBSCRIPTION_ID" \
+            -var "tenant_id=$TENANT_ID" \
             azurerm_storage_account.tfstate \
-            "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.STORAGE_RG_NAME }}/providers/Microsoft.Storage/storageAccounts/${{ env.STORAGE_ACCOUNT_NAME }}" || echo "Storage account not found"
+            "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$STORAGE_RG_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME" || echo "Storage account not found"
 
+      - name: Import Storage Container
+        working-directory: ./src/terraform/storage
+        env:
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+          STORAGE_RG_NAME: terraform-storage-rg
+          STORAGE_ACCOUNT_NAME: tfstatearlindsulejmani
+        run: |
           terraform import \
-            -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
-            -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
-            -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
+            -var "ssh_public_key=$SSH_PUBLIC_KEY" \
+            -var "subscription_id=$SUBSCRIPTION_ID" \
+            -var "tenant_id=$TENANT_ID" \
             azurerm_storage_container.tfstate \
-            "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.STORAGE_RG_NAME }}/providers/Microsoft.Storage/storageAccounts/${{ env.STORAGE_ACCOUNT_NAME }}/blobServices/default/containers/tfstate" || echo "Storage container not found"
+            "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$STORAGE_RG_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME/blobServices/default/containers/tfstate" || echo "Storage container not found"
 
+      - name: Import Key Vault
+        working-directory: ./src/terraform/storage
+        env:
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+          STORAGE_RG_NAME: terraform-storage-rg
+        run: |
           terraform import \
-            -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
-            -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
-            -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
+            -var "ssh_public_key=$SSH_PUBLIC_KEY" \
+            -var "subscription_id=$SUBSCRIPTION_ID" \
+            -var "tenant_id=$TENANT_ID" \
             azurerm_key_vault.tfvars \
-            "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.STORAGE_RG_NAME }}/providers/Microsoft.KeyVault/vaults/arlindsulejmanitfvars" || echo "Key Vault not found"
+            "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$STORAGE_RG_NAME/providers/Microsoft.KeyVault/vaults/arlindsulejmanitfvars" || echo "Key Vault not found"
 
+      - name: Import Key Vault SSH Secret
+        working-directory: ./src/terraform/storage
+        env:
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+        run: |
           ssh_uri=$(az keyvault secret list-versions \
             --vault-name arlindsulejmanitfvars \
             --name ssh-public-key \
@@ -88,12 +130,19 @@ jobs:
 
           if [[ -n "$ssh_uri" ]]; then
             terraform import \
-              -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
-              -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
-              -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
+              -var "ssh_public_key=$SSH_PUBLIC_KEY" \
+              -var "subscription_id=$SUBSCRIPTION_ID" \
+              -var "tenant_id=$TENANT_ID" \
               azurerm_key_vault_secret.ssh_public_key "$ssh_uri"
           fi
 
+      - name: Import Key Vault Startup Script Secret
+        working-directory: ./src/terraform/storage
+        env:
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+        run: |
           startup_uri=$(az keyvault secret list-versions \
             --vault-name arlindsulejmanitfvars \
             --name startup-script \
@@ -102,28 +151,40 @@ jobs:
 
           if [[ -n "$startup_uri" ]]; then
             terraform import \
-              -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
-              -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
-              -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
+              -var "ssh_public_key=$SSH_PUBLIC_KEY" \
+              -var "subscription_id=$SUBSCRIPTION_ID" \
+              -var "tenant_id=$TENANT_ID" \
               azurerm_key_vault_secret.startup_script "$startup_uri"
           fi
 
+      - name: Terraform Validate
+        working-directory: ./src/terraform/storage
+        run: terraform validate
+
       - name: Terraform Plan
         working-directory: ./src/terraform/storage
+        env:
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
           terraform plan \
-            -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
-            -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
-            -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
+            -var "ssh_public_key=$SSH_PUBLIC_KEY" \
+            -var "subscription_id=$SUBSCRIPTION_ID" \
+            -var "tenant_id=$TENANT_ID" \
             -out=tfplan
 
       - name: Terraform Apply
         working-directory: ./src/terraform/storage
+        env:
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
           terraform apply \
-            -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
-            -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
-            -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
+            -var "ssh_public_key=$SSH_PUBLIC_KEY" \
+            -var "subscription_id=$SUBSCRIPTION_ID" \
+            -var "tenant_id=$TENANT_ID" \
             -auto-approve tfplan
 
       - name: Terraform Format & Lockfile Update
@@ -145,46 +206,110 @@ jobs:
             git push origin HEAD:main
           fi
 
-
-  build-and-push:
-    name: Build & Push Docker Images
+  build-frontend:
+    name: Build & Push Frontend
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Azure Login
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-frontend-${{ hashFiles('src/docker/frontend/Dockerfile') }}
+          restore-keys: |
+            ${{ runner.os }}-frontend-
+
       - name: Docker Login to ACR
-        run: |
-          az acr login --name $ACR_NAME
+        run: az acr login --name $ACR_NAME
 
       - name: Build & Push Frontend
         working-directory: ./src/docker/frontend
         run: |
-          docker build -t $ACR_LOGIN_SERVER/frontend:latest .
+          docker build \
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache \
+            -t $ACR_LOGIN_SERVER/frontend:latest .
           docker push $ACR_LOGIN_SERVER/frontend:latest
+
+  build-backend:
+    name: Build & Push Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-backend-${{ hashFiles('src/docker/backend/Dockerfile') }}
+          restore-keys: |
+            ${{ runner.os }}-backend-
+
+      - name: Docker Login to ACR
+        run: az acr login --name $ACR_NAME
 
       - name: Build & Push Backend
         working-directory: ./src/docker/backend
         run: |
-          docker build -t $ACR_LOGIN_SERVER/backend:latest .
+          docker build \
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache \
+            -t $ACR_LOGIN_SERVER/backend:latest .
           docker push $ACR_LOGIN_SERVER/backend:latest
+
+  build-db:
+    name: Build & Push DB
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-db-${{ hashFiles('src/docker/db/Dockerfile') }}
+          restore-keys: |
+            ${{ runner.os }}-db-
+
+      - name: Docker Login to ACR
+        run: az acr login --name $ACR_NAME
 
       - name: Build & Push DB
         working-directory: ./src/docker/db
         run: |
-          docker build -t $ACR_LOGIN_SERVER/db:latest .
+          docker build \
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache \
+            -t $ACR_LOGIN_SERVER/db:latest .
           docker push $ACR_LOGIN_SERVER/db:latest
 
   deploy-infra:
     name: Deploy Infrastructure
     runs-on: ubuntu-latest
-    needs: deploy-backend
+    needs:
+      - deploy-backend
+      - build-frontend
+      - build-backend
+      - build-db
 
     steps:
       - name: Checkout Code
@@ -201,29 +326,46 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Mask Secrets
+        run: |
+          echo "::add-mask::${{ secrets.SSH_PUBLIC_KEY }}"
+
       - name: Terraform Init
         working-directory: ./src/terraform/infrastructure
+        env:
+          STORAGE_RG_NAME: terraform-storage-rg
+          STORAGE_ACCOUNT_NAME: tfstatearlindsulejmani
         run: |
           terraform init \
-            -backend-config="resource_group_name=${{ env.STORAGE_RG_NAME }}" \
-            -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT_NAME }}" \
+            -backend-config="resource_group_name=$STORAGE_RG_NAME" \
+            -backend-config="storage_account_name=$STORAGE_ACCOUNT_NAME" \
             -backend-config="container_name=tfstate" \
             -backend-config="key=infrastructure.tfstate"
 
+      - name: Terraform Validate
+        working-directory: ./src/terraform/infrastructure
+        run: terraform validate
+
       - name: Terraform Plan
         working-directory: ./src/terraform/infrastructure
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
           terraform plan \
-            -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
-            -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
+            -var "subscription_id=$SUBSCRIPTION_ID" \
+            -var "tenant_id=$TENANT_ID" \
             -out=tfplan
 
       - name: Terraform Apply
         working-directory: ./src/terraform/infrastructure
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
           terraform apply \
-            -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
-            -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
+            -var "subscription_id=$SUBSCRIPTION_ID" \
+            -var "tenant_id=$TENANT_ID" \
             -auto-approve tfplan
 
       - name: Terraform Format & Lockfile Update
