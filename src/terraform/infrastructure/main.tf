@@ -87,6 +87,11 @@ resource "azurerm_container_app" "db" {
     external_enabled = false
     target_port      = 5432
     transport        = "auto"
+
+    traffic_weight {
+      percentage      = 100
+      latest_revision = true
+    }
   }
 
   registry {
@@ -107,21 +112,23 @@ resource "azurerm_container_app" "db" {
       memory = "1.0Gi"
 
       env {
-        name  = "MYSQL_ROOT_PASSWORD"
+        name        = "MYSQL_ROOT_PASSWORD"
         secret_name = "mysql-root-password"
       }
 
       volume_mounts {
-        name       = "dbvolume"
-        mount_path = "/var/lib/mysql"
+        name = "dbvolume"
+        path = "/var/lib/mysql"
       }
     }
 
     volume {
-      name       = "dbvolume"
-      storage_type = "AzureFile"
-      storage_account_name = azurerm_storage_account.db_storage.name
-      storage_share_name   = azurerm_storage_share.db_share.name
+      name = "dbvolume"
+
+      azure_file {
+        storage_account_name = azurerm_storage_account.db_storage.name
+        share_name           = azurerm_storage_share.db_share.name
+      }
     }
   }
 }
@@ -139,10 +146,16 @@ resource "azurerm_container_app" "backend" {
   }
 
   ingress {
-    external_enabled = true
-    target_port      = 4000
+    external_enabled = false
+    target_port      = 5000
     transport        = "auto"
+
+    traffic_weight {
+      percentage      = 100
+      latest_revision = true
+    }
   }
+
 
   registry {
     server   = data.azurerm_container_registry.acr.login_server
@@ -201,7 +214,13 @@ resource "azurerm_container_app" "frontend" {
     external_enabled = true
     target_port      = 80
     transport        = "auto"
+
+    traffic_weight {
+      percentage      = 100
+      latest_revision = true
+    }
   }
+
 
   registry {
     server   = data.azurerm_container_registry.acr.login_server
