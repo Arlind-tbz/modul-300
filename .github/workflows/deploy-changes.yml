@@ -196,7 +196,7 @@ jobs:
         run: |
           acr_username_uri=$(az keyvault secret list-versions \
             --vault-name arlindsulejmanitfvars \
-            --name mysql-database \
+            --name acr_username \
             --query "[].id" \
             --output tsv | head -n1 || true)
 
@@ -213,7 +213,7 @@ jobs:
         run: |
           acr-password_uri=$(az keyvault secret list-versions \
             --vault-name arlindsulejmanitfvars \
-            --name mysql-database \
+            --name acr-password \
             --query "[].id" \
             --output tsv | head -n1 || true)
 
