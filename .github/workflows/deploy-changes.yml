@@ -224,24 +224,13 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Cache Docker layers
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-frontend-${{ hashFiles('src/docker/frontend/Dockerfile') }}
-          restore-keys: |
-            ${{ runner.os }}-frontend-
-
       - name: Docker Login to ACR
         run: az acr login --name $ACR_NAME
 
       - name: Build & Push Frontend
         working-directory: ./src/docker/frontend
         run: |
-          docker build \
-            --cache-from=type=local,src=/tmp/.buildx-cache \
-            --cache-to=type=local,dest=/tmp/.buildx-cache \
-            -t $ACR_LOGIN_SERVER/frontend:latest .
+          docker build -t $ACR_LOGIN_SERVER/frontend:latest .
           docker push $ACR_LOGIN_SERVER/frontend:latest
 
   build-backend:
@@ -260,24 +249,13 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Cache Docker layers
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-backend-${{ hashFiles('src/docker/backend/Dockerfile') }}
-          restore-keys: |
-            ${{ runner.os }}-backend-
-
       - name: Docker Login to ACR
         run: az acr login --name $ACR_NAME
 
       - name: Build & Push Backend
         working-directory: ./src/docker/backend
         run: |
-          docker build \
-            --cache-from=type=local,src=/tmp/.buildx-cache \
-            --cache-to=type=local,dest=/tmp/.buildx-cache \
-            -t $ACR_LOGIN_SERVER/backend:latest .
+          docker build -t $ACR_LOGIN_SERVER/backend:latest .
           docker push $ACR_LOGIN_SERVER/backend:latest
 
   build-db:
@@ -296,24 +274,13 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Cache Docker layers
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-db-${{ hashFiles('src/docker/db/Dockerfile') }}
-          restore-keys: |
-            ${{ runner.os }}-db-
-
       - name: Docker Login to ACR
         run: az acr login --name $ACR_NAME
 
       - name: Build & Push DB
         working-directory: ./src/docker/db
         run: |
-          docker build \
-            --cache-from=type=local,src=/tmp/.buildx-cache \
-            --cache-to=type=local,dest=/tmp/.buildx-cache \
-            -t $ACR_LOGIN_SERVER/db:latest .
+          docker build -t $ACR_LOGIN_SERVER/db:latest .
           docker push $ACR_LOGIN_SERVER/db:latest
 
   deploy-infra:
