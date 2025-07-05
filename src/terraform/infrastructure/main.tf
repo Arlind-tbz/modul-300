@@ -53,6 +53,25 @@ resource "azurerm_subnet" "subnet" {
   }
 }
 
+# --- Role Assignments for ACR Pull ---
+resource "azurerm_role_assignment" "acr_pull_frontend" {
+  scope                = data.azurerm_container_registry.acr.id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_container_app.frontend.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "acr_pull_backend" {
+  scope                = data.azurerm_container_registry.acr.id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_container_app.backend.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "acr_pull_db" {
+  scope                = data.azurerm_container_registry.acr.id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_container_app.db.identity[0].principal_id
+}
+
 # --- Container App Environment ---
 resource "azurerm_container_app_environment" "env" {
   name                 = "${var.project_name}-env"
@@ -85,8 +104,7 @@ resource "azurerm_container_app" "backend" {
   }
 
   registry {
-    server   = data.azurerm_container_registry.acr.login_server
-    identity = "SystemAssigned"
+    server = data.azurerm_container_registry.acr.login_server
   }
 
   secret {
@@ -134,6 +152,8 @@ resource "azurerm_container_app" "backend" {
       }
     }
   }
+
+  depends_on = [azurerm_role_assignment.acr_pull_backend]
 }
 
 # --- DB Container App ---
@@ -159,8 +179,7 @@ resource "azurerm_container_app" "db" {
   }
 
   registry {
-    server   = data.azurerm_container_registry.acr.login_server
-    identity = "SystemAssigned"
+    server = data.azurerm_container_registry.acr.login_server
   }
 
   secret {
@@ -175,12 +194,14 @@ resource "azurerm_container_app" "db" {
       cpu    = 0.5
       memory = "1.0Gi"
 
-    env {
-      name        = "MYSQL_ROOT_PASSWORD"
-      secret_name = "mysql-root-password"
-    }
+      env {
+        name        = "MYSQL_ROOT_PASSWORD"
+        secret_name = "mysql-root-password"
+      }
     }
   }
+
+  depends_on = [azurerm_role_assignment.acr_pull_db]
 }
 
 # --- Frontend Container App ---
@@ -206,8 +227,7 @@ resource "azurerm_container_app" "frontend" {
   }
 
   registry {
-    server   = data.azurerm_container_registry.acr.login_server
-    identity = "SystemAssigned"
+    server = data.azurerm_container_registry.acr.login_server
   }
 
   template {
@@ -218,23 +238,6 @@ resource "azurerm_container_app" "frontend" {
       memory = "1.0Gi"
     }
   }
-}
 
-# --- Role Assignments for ACR Pull ---
-resource "azurerm_role_assignment" "acr_pull_frontend" {
-  scope                = data.azurerm_container_registry.acr.id
-  role_definition_name = "AcrPull"
-  principal_id         = azurerm_container_app.frontend.identity[0].principal_id
-}
-
-resource "azurerm_role_assignment" "acr_pull_backend" {
-  scope                = data.azurerm_container_registry.acr.id
-  role_definition_name = "AcrPull"
-  principal_id         = azurerm_container_app.backend.identity[0].principal_id
-}
-
-resource "azurerm_role_assignment" "acr_pull_db" {
-  scope                = data.azurerm_container_registry.acr.id
-  role_definition_name = "AcrPull"
-  principal_id         = azurerm_container_app.db.identity[0].principal_id
+  depends_on = [azurerm_role_assignment.acr_pull_frontend]
 }
