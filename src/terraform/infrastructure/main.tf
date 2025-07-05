@@ -185,11 +185,11 @@ resource "azurerm_container_app" "backend" {
       }
       env {
         name        = "MYSQL_PASSWORD"
-        secret_name = "mysql-password"
+        secret_name = "mysql_password"
       }
       env {
         name        = "MYSQL_ROOT_PASSWORD"
-        secret_name = "mysql-root-password"
+        secret_name = "mysql_root_password"
       }
       env {
         name        = "MYSQL_DATABASE"
