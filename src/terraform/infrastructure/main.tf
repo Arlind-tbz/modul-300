@@ -56,8 +56,9 @@ resource "azurerm_subnet" "subnet" {
 
   delegation {
     name = "delegation"
+
     service_delegation {
-      name    = "Microsoft.App/managedEnvironments"
+      name    = "Microsoft.App/environments"
       actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
     }
   }
@@ -68,7 +69,6 @@ resource "azurerm_container_app_environment" "env" {
   name                 = "${var.project_name}-env"
   location             = var.location
   resource_group_name  = azurerm_resource_group.infra_rg.name
-  subnet_id            = azurerm_subnet.subnet.id
 }
 
 # --- DB Container App (with Azure File volume and secrets) ---
@@ -167,15 +167,19 @@ resource "azurerm_container_app" "backend" {
       }
       env {
         name  = "MYSQL_USER"
-        value = "root"
+        secret_name = "mysql_user"
       }
       env {
         name  = "MYSQL_PASSWORD"
         secret_name = "mysql-password"
       }
       env {
+        name  = "MYSQL_ROOT_PASSWORD"
+        secret_name = "mysql-root-password"
+      }
+      env {
         name  = "MYSQL_DATABASE"
-        value = "todo_db"
+        secret_name = "mysql_database"
       }
     }
   }
