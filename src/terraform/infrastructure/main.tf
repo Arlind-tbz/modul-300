@@ -85,19 +85,19 @@ resource "azurerm_user_assigned_identity" "db_identity" {
 
 # --- Container App Environment ---
 resource "azurerm_container_app_environment" "env" {
-  name                 = "${var.project_name}-env"
-  location             = var.location
-  resource_group_name  = azurerm_resource_group.infra_rg.name
+  name                = "${var.project_name}-env"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.infra_rg.name
 
   depends_on = [azurerm_resource_provider_registration.container_apps]
 }
 
 # --- Backend Container App ---
 resource "azurerm_container_app" "backend" {
-  name                          = "${var.project_name}-backend"
+  name                         = "${var.project_name}-backend"
   container_app_environment_id = azurerm_container_app_environment.env.id
-  resource_group_name           = azurerm_resource_group.infra_rg.name
-  revision_mode                 = "Single"
+  resource_group_name          = azurerm_resource_group.infra_rg.name
+  revision_mode                = "Single"
 
   identity {
     type         = "UserAssigned"
@@ -175,10 +175,10 @@ resource "azurerm_container_app" "backend" {
 
 # --- DB Container App ---
 resource "azurerm_container_app" "db" {
-  name                          = "${var.project_name}-db"
+  name                         = "${var.project_name}-db"
   container_app_environment_id = azurerm_container_app_environment.env.id
-  resource_group_name           = azurerm_resource_group.infra_rg.name
-  revision_mode                 = "Single"
+  resource_group_name          = azurerm_resource_group.infra_rg.name
+  revision_mode                = "Single"
 
   identity {
     type         = "UserAssigned"
@@ -229,10 +229,10 @@ resource "azurerm_container_app" "db" {
 
 # --- Frontend Container App ---
 resource "azurerm_container_app" "frontend" {
-  name                          = "${var.project_name}-frontend"
+  name                         = "${var.project_name}-frontend"
   container_app_environment_id = azurerm_container_app_environment.env.id
-  resource_group_name           = azurerm_resource_group.infra_rg.name
-  revision_mode                 = "Single"
+  resource_group_name          = azurerm_resource_group.infra_rg.name
+  revision_mode                = "Single"
 
   identity {
     type         = "UserAssigned"
