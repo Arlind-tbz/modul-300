@@ -24,6 +24,7 @@ resource "azurerm_storage_account" "db_storage" {
   name                     = "dbstorage${var.project_name}"
   resource_group_name      = azurerm_resource_group.infra_rg.name
   account_tier             = "Standard"
+  location                 = var.location
   account_replication_type = "LRS"
 }
 
@@ -66,6 +67,7 @@ resource "azurerm_subnet" "subnet" {
 # --- Container App Environment ---
 resource "azurerm_container_app_environment" "env" {
   name                 = "${var.project_name}-env"
+  location             = var.location
   resource_group_name  = azurerm_resource_group.infra_rg.name
 }
 
