@@ -38,7 +38,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Terraform Init (infra)
-        working-directory: ./src/infrastructure
+        working-directory: ./src/terraform/infrastructure
         run: |
           terraform init \
             -backend-config="resource_group_name=terraform-storage-rg" \
@@ -47,7 +47,7 @@ jobs:
             -backend-config="key=infrastructure.tfstate"
 
       - name: Terraform Destroy (infra)
-        working-directory: ./src/infrastructure
+        working-directory: ./src/terraform/infrastructure
         run: |
           terraform destroy \
             -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
@@ -85,10 +85,10 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Terraform Init (backend)
-        working-directory: ./src/storage
+        working-directory: ./src/terraform/storage
         run: terraform init
       - name: Terraform Import Resources
-        working-directory: ./src/storage
+        working-directory: ./src/terraform/storage
         run: |
           terraform import \
             -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
@@ -147,7 +147,7 @@ jobs:
           fi
 
       - name: Terraform Destroy (backend)
-        working-directory: ./src/storage
+        working-directory: ./src/terraform/storage
         run: |
           terraform destroy \
             -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
