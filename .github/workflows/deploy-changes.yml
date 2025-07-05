@@ -57,6 +57,8 @@ jobs:
           echo "::add-mask::${{ secrets.MYSQL_PASSWORD }}"
           echo "::add-mask::${{ secrets.MYSQL_DATABASE }}"
           echo "::add-mask::${{ secrets.AZURE_CREDENTIALS }}"
+          echo "::add-mask::${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}"
+          echo "::add-mask::${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}"
           echo "::add-mask::${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}"
           echo "::add-mask::${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}"
 
@@ -326,9 +328,10 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Mask All Secrets
+      - name: Mask Secrets
         run: |
-          echo "::add-mask::${{ secrets.AZURE_CREDENTIALS }}"
+          echo "::add-mask::${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}"
+          echo "::add-mask::${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}"
           echo "::add-mask::${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}"
           echo "::add-mask::${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}"
 
