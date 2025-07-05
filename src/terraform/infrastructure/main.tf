@@ -19,9 +19,16 @@ data "azurerm_container_registry" "acr" {
   resource_group_name = var.storage_resource_group_name
 }
 
-# --- ACR Credentials ---
-variable "acr_username" {}
-variable "acr_password" {}
+# --- ACR Credentials from Key Vault ---
+data "azurerm_key_vault_secret" "acr_username" {
+  name         = "acr-username"
+  key_vault_id = data.azurerm_key_vault.tfvars.id
+}
+
+data "azurerm_key_vault_secret" "acr_password" {
+  name         = "acr-password"
+  key_vault_id = data.azurerm_key_vault.tfvars.id
+}
 
 resource "azurerm_resource_provider_registration" "container_apps" {
   name = "Microsoft.App"
@@ -109,14 +116,14 @@ resource "azurerm_container_app" "backend" {
   }
 
   registry {
-    server   = data.azurerm_container_registry.acr.login_server
-    username = var.acr_username
+    server               = data.azurerm_container_registry.acr.login_server
+    username             = data.azurerm_key_vault_secret.acr_username.value
     password_secret_name = "acr-password"
   }
 
   secret {
     name  = "acr-password"
-    value = var.acr_password
+    value = data.azurerm_key_vault_secret.acr_password.value
   }
 
   secret {
@@ -190,14 +197,14 @@ resource "azurerm_container_app" "db" {
   }
 
   registry {
-    server   = data.azurerm_container_registry.acr.login_server
-    username = var.acr_username
+    server               = data.azurerm_container_registry.acr.login_server
+    username             = data.azurerm_key_vault_secret.acr_username.value
     password_secret_name = "acr-password"
   }
 
   secret {
     name  = "acr-password"
-    value = var.acr_password
+    value = data.azurerm_key_vault_secret.acr_password.value
   }
 
   secret {
@@ -244,14 +251,14 @@ resource "azurerm_container_app" "frontend" {
   }
 
   registry {
-    server   = data.azurerm_container_registry.acr.login_server
-    username = var.acr_username
+    server               = data.azurerm_container_registry.acr.login_server
+    username             = data.azurerm_key_vault_secret.acr_username.value
     password_secret_name = "acr-password"
   }
 
   secret {
     name  = "acr-password"
-    value = var.acr_password
+    value = data.azurerm_key_vault_secret.acr_password.value
   }
 
   template {
