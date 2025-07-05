@@ -122,12 +122,10 @@ resource "azurerm_container_app" "db" {
     }
 
     volume {
-      name = "dbvolume"
-
-      azure_file {
-        storage_account_name = azurerm_storage_account.db_storage.name
-        share_name           = azurerm_storage_share.db_share.name
-      }
+      name          = "dbvolume"
+      storage_name  = azurerm_storage_share.db_share.name
+      storage_type  = "AzureFile"
+      mount_options = "dir_mode=0751,file_mode=0751"
     }
   }
 }
