@@ -52,3 +52,9 @@ variable "storage_container_name" {
   type        = string
   default     = "tfstate"
 }
+
+variable "acr_name" {
+  description = "Globally unique name for Azure Container Registry"
+  type        = string
+  default     = "arlinddevacr"
+}

@@ -13,11 +13,14 @@ permissions:
   contents: write
 
 env:
-  ARM_SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-  ARM_CLIENT_ID:       ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
-  ARM_CLIENT_SECRET:   ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
-  ARM_TENANT_ID:       ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
-
+  ARM_SUBSCRIPTION_ID:  ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+  ARM_CLIENT_ID:        ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
+  ARM_CLIENT_SECRET:    ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
+  ARM_TENANT_ID:        ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+  ACR_NAME:             arlinddevacr
+  ACR_LOGIN_SERVER:     arlinddevacr.azurecr.io
+  STORAGE_RG_NAME:      terraform-storage-rg
+  STORAGE_ACCOUNT_NAME: tfstatearlindsulejmani
 jobs:
   deploy-backend:
     name: Deploy Backend
@@ -47,28 +50,35 @@ jobs:
             -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
             -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
             azurerm_resource_group.storage_rg \
-            "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/terraform-storage-rg" || echo "Resource group not found"
+            "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.STORAGE_RG_NAME }}" || echo "Resource group not found"
+
+          terraform import \
+            -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
+            -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
+            -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
+            azurerm_container_registry.acr \
+            "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.STORAGE_RG_NAME }}/providers/Microsoft.ContainerRegistry/registries/${{ env.ACR_NAME }}" || echo "ACR not found"
 
           terraform import \
             -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
             -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
             -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
             azurerm_storage_account.tfstate \
-            "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/terraform-storage-rg/providers/Microsoft.Storage/storageAccounts/tfstatearlindsulejmani" || echo "Storage account not found"
+            "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.STORAGE_RG_NAME }}/providers/Microsoft.Storage/storageAccounts/${{ env.STORAGE_ACCOUNT_NAME }}" || echo "Storage account not found"
 
           terraform import \
             -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
             -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
             -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
             azurerm_storage_container.tfstate \
-            "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/terraform-storage-rg/providers/Microsoft.Storage/storageAccounts/tfstatearlindsulejmani/blobServices/default/containers/tfstate" || echo "Storage container not found"
+            "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.STORAGE_RG_NAME }}/providers/Microsoft.Storage/storageAccounts/${{ env.STORAGE_ACCOUNT_NAME }}/blobServices/default/containers/tfstate" || echo "Storage container not found"
 
           terraform import \
             -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
             -var "subscription_id=${{ env.ARM_SUBSCRIPTION_ID }}" \
             -var "tenant_id=${{ env.ARM_TENANT_ID }}" \
             azurerm_key_vault.tfvars \
-            "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/terraform-storage-rg/providers/Microsoft.KeyVault/vaults/arlindsulejmanitfvars" || echo "Key Vault not found"
+            "/subscriptions/${{ env.ARM_SUBSCRIPTION_ID }}/resourceGroups/${{ env.STORAGE_RG_NAME }}/providers/Microsoft.KeyVault/vaults/arlindsulejmanitfvars" || echo "Key Vault not found"
 
           ssh_uri=$(az keyvault secret list-versions \
             --vault-name arlindsulejmanitfvars \
@@ -135,6 +145,42 @@ jobs:
             git push origin HEAD:main
           fi
 
+
+  build-and-push:
+    name: Build & Push Docker Images
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Docker Login to ACR
+        run: |
+          az acr login --name $ACR_NAME
+
+      - name: Build & Push Frontend
+        working-directory: ./src/docker/frontend
+        run: |
+          docker build -t $ACR_LOGIN_SERVER/frontend:latest .
+          docker push $ACR_LOGIN_SERVER/frontend:latest
+
+      - name: Build & Push Backend
+        working-directory: ./src/docker/backend
+        run: |
+          docker build -t $ACR_LOGIN_SERVER/backend:latest .
+          docker push $ACR_LOGIN_SERVER/backend:latest
+
+      - name: Build & Push DB
+        working-directory: ./src/docker/db
+        run: |
+          docker build -t $ACR_LOGIN_SERVER/db:latest .
+          docker push $ACR_LOGIN_SERVER/db:latest
+
   deploy-infra:
     name: Deploy Infrastructure
     runs-on: ubuntu-latest
@@ -159,8 +205,8 @@ jobs:
         working-directory: ./src/terraform/infrastructure
         run: |
           terraform init \
-            -backend-config="resource_group_name=terraform-storage-rg" \
-            -backend-config="storage_account_name=tfstatearlindsulejmani" \
+            -backend-config="resource_group_name=${{ env.STORAGE_RG_NAME }}" \
+            -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT_NAME }}" \
             -backend-config="container_name=tfstate" \
             -backend-config="key=infrastructure.tfstate"
 
