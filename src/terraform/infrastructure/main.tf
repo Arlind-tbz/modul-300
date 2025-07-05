@@ -53,6 +53,13 @@ resource "azurerm_subnet" "subnet" {
   }
 }
 
+# --- Grant Terraform Client Role to Assign ACR Permissions ---
+resource "azurerm_role_assignment" "acr_admin_for_terraform" {
+  scope                = data.azurerm_container_registry.acr.id
+  role_definition_name = "User Access Administrator"
+  principal_id         = data.azurerm_client_config.current.object_id
+}
+
 # --- User Assigned Identities ---
 resource "azurerm_user_assigned_identity" "frontend_identity" {
   name                = "${var.project_name}-frontend-id"
@@ -77,18 +84,21 @@ resource "azurerm_role_assignment" "acr_pull_frontend" {
   scope                = data.azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
   principal_id         = azurerm_user_assigned_identity.frontend_identity.principal_id
+  depends_on           = [azurerm_role_assignment.acr_admin_for_terraform]
 }
 
 resource "azurerm_role_assignment" "acr_pull_backend" {
   scope                = data.azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
   principal_id         = azurerm_user_assigned_identity.backend_identity.principal_id
+  depends_on           = [azurerm_role_assignment.acr_admin_for_terraform]
 }
 
 resource "azurerm_role_assignment" "acr_pull_db" {
   scope                = data.azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
   principal_id         = azurerm_user_assigned_identity.db_identity.principal_id
+  depends_on           = [azurerm_role_assignment.acr_admin_for_terraform]
 }
 
 # --- Container App Environment ---
