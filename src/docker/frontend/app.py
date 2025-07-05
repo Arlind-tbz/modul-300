@@ -4,25 +4,51 @@ import os
 import time
 
 app = Flask(__name__)
-BACKEND_API = os.environ.get("BACKEND_API", "http://backend:5000/api")  # use env var if set
+BACKEND_API = os.environ.get("BACKEND_API", "http://backend:5000/api")
 
-def wait_for_backend(url, delay=5):
-    attempt = 1
-    while True:
+def get_with_retries(endpoint, retries=3, delay=2):
+    for attempt in range(retries):
         try:
-            res = requests.get(f"{url}/tasks")
-            if res.status_code == 200:
-                print("✅ Backend is ready.")
-                return
-        except requests.exceptions.ConnectionError:
-            print(f"⏳ Waiting for backend... attempt {attempt}")
-            attempt += 1
-            time.sleep(delay)
+            res = requests.get(f"{BACKEND_API}{endpoint}")
+            res.raise_for_status()
+            return res
+        except requests.RequestException as e:
+            if attempt < retries - 1:
+                print(f"⚠️ Failed to GET {endpoint}: {e}. Retrying ({attempt+1}/{retries})...")
+                time.sleep(delay)
+            else:
+                raise e
+
+def post_with_retries(endpoint, data, retries=3, delay=2):
+    for attempt in range(retries):
+        try:
+            res = requests.post(f"{BACKEND_API}{endpoint}", json=data)
+            res.raise_for_status()
+            return res
+        except requests.RequestException as e:
+            if attempt < retries - 1:
+                print(f"⚠️ Failed to POST {endpoint}: {e}. Retrying ({attempt+1}/{retries})...")
+                time.sleep(delay)
+            else:
+                raise e
+
+def delete_with_retries(endpoint, retries=3, delay=2):
+    for attempt in range(retries):
+        try:
+            res = requests.delete(f"{BACKEND_API}{endpoint}")
+            res.raise_for_status()
+            return res
+        except requests.RequestException as e:
+            if attempt < retries - 1:
+                print(f"⚠️ Failed to DELETE {endpoint}: {e}. Retrying ({attempt+1}/{retries})...")
+                time.sleep(delay)
+            else:
+                raise e
 
 @app.route("/", methods=["GET"])
 def index():
     try:
-        res = requests.get(f"{BACKEND_API}/tasks")
+        res = get_with_retries("/tasks")
         tasks = res.json()
         return render_template("index.html", tasks=tasks)
     except Exception as e:
@@ -32,7 +58,7 @@ def index():
 def add_task():
     title = request.form.get("title")
     try:
-        requests.post(f"{BACKEND_API}/tasks", json={"title": title})
+        post_with_retries("/tasks", {"title": title})
     except Exception as e:
         return f"<h1>Error adding task</h1><p>{e}</p>", 500
     return redirect(url_for("index"))
@@ -40,11 +66,10 @@ def add_task():
 @app.route("/delete/<int:task_id>")
 def delete_task(task_id):
     try:
-        requests.delete(f"{BACKEND_API}/tasks/{task_id}")
+        delete_with_retries(f"/tasks/{task_id}")
     except Exception as e:
         return f"<h1>Error deleting task</h1><p>{e}</p>", 500
     return redirect(url_for("index"))
 
 if __name__ == "__main__":
-    wait_for_backend(BACKEND_API)
     app.run(host="0.0.0.0", port=8080)
