@@ -90,23 +90,23 @@ resource "azurerm_container_app" "backend" {
   }
 
   secret {
-    name  = "mysql_user"
+    name  = "mysql-user"
     value = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.tfvars.name};SecretName=mysql-user)"
   }
 
   secret {
-    name  = "mysql_database"
+    name  = "mysql-database"
     value = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.tfvars.name};SecretName=mysql-database)"
   }
 
   secret {
-    name  = "mysql_password"
+    name  = "mysql-password"
     value = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.tfvars.name};SecretName=mysql-password)"
   }
 
   secret {
-    name  = "mysql_root_password"
-    value = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.tfvars.name};SecretName=mysql_root_password)"
+    name  = "mysql-root-password"
+    value = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.tfvars.name};SecretName=mysql-root-password)"
   }
 
   template {
@@ -117,24 +117,20 @@ resource "azurerm_container_app" "backend" {
       memory = "1.0Gi"
 
       env {
-        name  = "MYSQL_HOST"
-        value = "db"
-      }
-      env {
         name        = "MYSQL_USER"
-        secret_name = "mysql_user"
+        secret_name = "mysql-user"
       }
       env {
         name        = "MYSQL_PASSWORD"
-        secret_name = "mysql_password"
+        secret_name = "mysql-password"
       }
       env {
         name        = "MYSQL_ROOT_PASSWORD"
-        secret_name = "mysql_root_password"
+        secret_name = "mysql-root-password"
       }
       env {
         name        = "MYSQL_DATABASE"
-        secret_name = "mysql_database"
+        secret_name = "mysql-database"
       }
     }
   }
@@ -168,8 +164,8 @@ resource "azurerm_container_app" "db" {
   }
 
   secret {
-    name  = "mysql_root_password"
-    value = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.tfvars.name};SecretName=mysql_root_password)"
+    name  = "mysql-root-password"
+    value = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.tfvars.name};SecretName=mysql-root-password)"
   }
 
   template {
@@ -179,10 +175,10 @@ resource "azurerm_container_app" "db" {
       cpu    = 0.5
       memory = "1.0Gi"
 
-      env {
-        name        = "MYSQL_ROOT_PASSWORD"
-        secret_name = "mysql_root_password"
-      }
+    env {
+      name        = "MYSQL_ROOT_PASSWORD"
+      secret_name = "mysql-root-password"
+    }
     }
   }
 }
