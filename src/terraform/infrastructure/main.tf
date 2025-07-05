@@ -120,13 +120,12 @@ resource "azurerm_container_app" "db" {
     }
   }
 
-    volume {
-      name = "dbvolume"
+  volume {
+    name = "dbvolume"
 
-      azure_file {
-        storage_account_name = azurerm_storage_account.db_storage.name
-        share_name           = azurerm_storage_share.db_share.name
-      }
+    azure_file {
+      storage_account_name = azurerm_storage_account.db_storage.name
+      share_name           = azurerm_storage_share.db_share.name
     }
   }
 }
