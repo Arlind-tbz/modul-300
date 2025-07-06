@@ -225,11 +225,11 @@ resource "azurerm_container_app" "db" {
         name        = "MYSQL_ROOT_PASSWORD"
         secret_name = "mysql-root-password"
       }
+    }
 
-      volume_mount {
-        name = "ephemeral-storage"
-        path = "/var/lib/mysql"
-      }
+    volume_mounts {
+      name = "ephemeral-storage"
+      path = "/var/lib/mysql"
     }
 
     volume {
