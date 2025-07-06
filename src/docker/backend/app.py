@@ -16,8 +16,38 @@ logging.basicConfig(
 app = Flask(__name__)
 CORS(app)
 
-# Track last known MySQL connection error
 last_db_error = {"message": "Not yet attempted"}
+
+def ensure_db_and_user_exist():
+    """Ensure that the target database and user exist, and grant necessary permissions."""
+    try:
+        conn = mysql.connector.connect(
+            host=os.getenv("MYSQL_HOST", "mysql"),
+            user="root",
+            password=os.getenv("MYSQL_ROOT_PASSWORD", "root")
+        )
+        cursor = conn.cursor()
+
+        db_name = os.getenv("MYSQL_DATABASE", "todo_db")
+        db_user = os.getenv("MYSQL_USER", "root")
+        db_pass = os.getenv("MYSQL_PASSWORD", "root")
+
+        logging.info(f"Ensuring database '{db_name}' exists...")
+        cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{db_name}`;")
+
+        if db_user != "root":
+            logging.info(f"Ensuring user '{db_user}' exists...")
+            cursor.execute(f"CREATE USER IF NOT EXISTS '{db_user}'@'%' IDENTIFIED BY %s;", (db_pass,))
+            cursor.execute(f"GRANT ALL PRIVILEGES ON `{db_name}`.* TO '{db_user}'@'%';")
+            cursor.execute("FLUSH PRIVILEGES;")
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+        logging.info("Database and user setup complete.")
+
+    except Error as e:
+        logging.error(f"Error ensuring DB/user exist: {e}")
 
 def get_connection(delay=2):
     """Attempt to connect to MySQL indefinitely, log errors, and update error state."""
@@ -66,7 +96,6 @@ def healthcheck():
             "error": str(e)
         }), 503
 
-
 @app.route("/api/tasks", methods=["GET"])
 def get_tasks():
     try:
@@ -114,5 +143,8 @@ def delete_task(task_id):
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
+    logging.info("Bootstrapping DB and user...")
+    ensure_db_and_user_exist()
+
     logging.info("Starting Flask server...")
     app.run(host="0.0.0.0", port=5000)
