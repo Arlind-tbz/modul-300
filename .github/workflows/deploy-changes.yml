@@ -35,13 +35,20 @@ jobs:
 
       - name: Generate terraform.tfvars
         working-directory: ./src/terraform/storage
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
         run: |
-          echo subscription_id="${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" > terraform.tfvars
-          echo tenant_id="${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}" >> terraform.tfvars
-          echo mysql_root_password="${{ secrets.MYSQL_ROOT_PASSWORD }}" >> terraform.tfvars
-          echo mysql_user="${{ secrets.MYSQL_USER }}" >> terraform.tfvars
-          echo mysql_password="${{ secrets.MYSQL_PASSWORD }}" >> terraform.tfvars
-          echo mysql_database="${{ secrets.MYSQL_DATABASE }}" >> terraform.tfvars
+          echo subscription_id=\"$SUBSCRIPTION_ID\"       >  terraform.tfvars
+          echo tenant_id=\"$TENANT_ID\"                   >> terraform.tfvars
+          echo mysql_root_password=\"$MYSQL_ROOT_PASSWORD\" >> terraform.tfvars
+          echo mysql_user=\"$MYSQL_USER\"                 >> terraform.tfvars
+          echo mysql_password=\"$MYSQL_PASSWORD\"         >> terraform.tfvars
+          echo mysql_database=\"$MYSQL_DATABASE\"         >> terraform.tfvars
 
       - name: Mask Secrets
         run: |
@@ -57,115 +64,162 @@ jobs:
 
       - name: Import Resource Group
         working-directory: ./src/terraform/storage
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+          STORAGE_RG_NAME: terraform-storage-rg
         run: |
           terraform import \
             azurerm_resource_group.storage_rg \
-            "/subscriptions/${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}/resourceGroups/terraform-storage-rg" || echo "Resource group not found"
+            "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$STORAGE_RG_NAME" || echo "Resource group not found"
 
       - name: Import ACR
         working-directory: ./src/terraform/storage
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+          STORAGE_RG_NAME: terraform-storage-rg
+          ACR_NAME: arlinddevacr
         run: |
           terraform import \
             azurerm_container_registry.acr \
-            "/subscriptions/${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}/resourceGroups/terraform-storage-rg/providers/Microsoft.ContainerRegistry/registries/arlinddevacr" || echo "ACR not found"
+            "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$STORAGE_RG_NAME/providers/Microsoft.ContainerRegistry/registries/$ACR_NAME" || echo "ACR not found"
 
       - name: Import Storage Account
         working-directory: ./src/terraform/storage
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+          STORAGE_RG_NAME: terraform-storage-rg
+          STORAGE_ACCOUNT_NAME: tfstatearlindsulejmani
         run: |
           terraform import \
             azurerm_storage_account.tfstate \
-            "/subscriptions/${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}/resourceGroups/terraform-storage-rg/providers/Microsoft.Storage/storageAccounts/tfstatearlindsulejmani" || echo "Storage account not found"
+            "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$STORAGE_RG_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME" || echo "Storage account not found"
 
       - name: Import Storage Container
         working-directory: ./src/terraform/storage
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+          STORAGE_RG_NAME: terraform-storage-rg
+          STORAGE_ACCOUNT_NAME: tfstatearlindsulejmani
         run: |
           terraform import \
             azurerm_storage_container.tfstate \
-            "/subscriptions/${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}/resourceGroups/terraform-storage-rg/providers/Microsoft.Storage/storageAccounts/tfstatearlindsulejmani/blobServices/default/containers/tfstate" || echo "Storage container not found"
+            "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$STORAGE_RG_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME/blobServices/default/containers/tfstate" || echo "Storage container not found"
 
       - name: Import Key Vault
         working-directory: ./src/terraform/storage
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+          STORAGE_RG_NAME: terraform-storage-rg
         run: |
           terraform import \
             azurerm_key_vault.tfvars \
-            "/subscriptions/${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}/resourceGroups/terraform-storage-rg/providers/Microsoft.KeyVault/vaults/arlindsulejmanitfvars" || echo "Key Vault not found"
+            "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$STORAGE_RG_NAME/providers/Microsoft.KeyVault/vaults/arlindsulejmanitfvars" || echo "Key Vault not found"
 
       - name: Import Key Vault mysql_root_password Secret
         working-directory: ./src/terraform/storage
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
-          uri=$(az keyvault secret list-versions \
+          mysql_root_password_uri=$(az keyvault secret list-versions \
             --vault-name arlindsulejmanitfvars \
             --name mysql-root-password \
             --query "[].id" \
             --output tsv | head -n1 || true)
 
-          if [[ -n "$uri" ]]; then
-            terraform import azurerm_key_vault_secret.mysql_root_password "$uri"
+          if [[ -n "$mysql_root_password_uri" ]]; then
+            terraform import \
+              azurerm_key_vault_secret.mysql_root_password "$mysql_root_password_uri"
           fi
 
       - name: Import Key Vault mysql_user Secret
         working-directory: ./src/terraform/storage
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
-          uri=$(az keyvault secret list-versions \
+          mysql_user_uri=$(az keyvault secret list-versions \
             --vault-name arlindsulejmanitfvars \
             --name mysql-user \
             --query "[].id" \
             --output tsv | head -n1 || true)
 
-          if [[ -n "$uri" ]]; then
-            terraform import azurerm_key_vault_secret.mysql_user "$uri"
+          if [[ -n "$mysql_user_uri" ]]; then
+            terraform import \
+              azurerm_key_vault_secret.mysql_user "$mysql_user_uri"
           fi
 
       - name: Import Key Vault mysql_password Secret
         working-directory: ./src/terraform/storage
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
-          uri=$(az keyvault secret list-versions \
+          mysql_password_uri=$(az keyvault secret list-versions \
             --vault-name arlindsulejmanitfvars \
             --name mysql-password \
             --query "[].id" \
             --output tsv | head -n1 || true)
 
-          if [[ -n "$uri" ]]; then
-            terraform import azurerm_key_vault_secret.mysql_password "$uri"
+          if [[ -n "$mysql_password_uri" ]]; then
+            terraform import \
+              azurerm_key_vault_secret.mysql_password "$mysql_password_uri"
           fi
 
       - name: Import Key Vault mysql_database Secret
         working-directory: ./src/terraform/storage
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
-          uri=$(az keyvault secret list-versions \
+          mysql_database_uri=$(az keyvault secret list-versions \
             --vault-name arlindsulejmanitfvars \
             --name mysql-database \
             --query "[].id" \
             --output tsv | head -n1 || true)
 
-          if [[ -n "$uri" ]]; then
-            terraform import azurerm_key_vault_secret.mysql_database "$uri"
+          if [[ -n "$mysql_database_uri" ]]; then
+            terraform import \
+              azurerm_key_vault_secret.mysql_database "$mysql_database_uri"
           fi
 
       - name: Import Key Vault acr_username Secret
         working-directory: ./src/terraform/storage
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
-          uri=$(az keyvault secret list-versions \
+          acr_username_uri=$(az keyvault secret list-versions \
             --vault-name arlindsulejmanitfvars \
             --name acr-username \
             --query "[].id" \
             --output tsv | head -n1 || true)
 
-          if [[ -n "$uri" ]]; then
-            terraform import azurerm_key_vault_secret.acr_username "$uri"
+          if [[ -n "$acr_username_uri" ]]; then
+            terraform import \
+              azurerm_key_vault_secret.acr_username "$acr_username_uri"
           fi
 
       - name: Import Key Vault acr-password Secret
         working-directory: ./src/terraform/storage
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
-          uri=$(az keyvault secret list-versions \
+          acr_password_uri=$(az keyvault secret list-versions \
             --vault-name arlindsulejmanitfvars \
             --name acr-password \
             --query "[].id" \
             --output tsv | head -n1 || true)
 
-          if [[ -n "$uri" ]]; then
-            terraform import azurerm_key_vault_secret.acr_password "$uri"
+          if [[ -n "$acr_password_uri" ]]; then
+            terraform import \
+              azurerm_key_vault_secret.acr_password "$acr_password_uri"
           fi
 
       - name: Terraform Validate
@@ -174,11 +228,21 @@ jobs:
 
       - name: Terraform Plan
         working-directory: ./src/terraform/storage
-        run: terraform plan -out=tfplan
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+        run: |
+          terraform plan \
+            -out=tfplan
 
       - name: Terraform Apply
         working-directory: ./src/terraform/storage
-        run: terraform apply -auto-approve tfplan
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+        run: |
+          terraform apply \
+            -auto-approve tfplan
 
       - name: Terraform Format & Lockfile Update
         working-directory: ./src/terraform/storage
@@ -307,18 +371,24 @@ jobs:
 
       - name: Terraform Init
         working-directory: ./src/terraform/infrastructure
+        env:
+          STORAGE_RG_NAME: terraform-storage-rg
+          STORAGE_ACCOUNT_NAME: tfstatearlindsulejmani
         run: |
           terraform init \
-            -backend-config="resource_group_name=terraform-storage-rg" \
-            -backend-config="storage_account_name=tfstatearlindsulejmani" \
+            -backend-config="resource_group_name=$STORAGE_RG_NAME" \
+            -backend-config="storage_account_name=$STORAGE_ACCOUNT_NAME" \
             -backend-config="container_name=tfstate" \
             -backend-config="key=infrastructure.tfstate"
 
       - name: Generate terraform.tfvars
         working-directory: ./src/terraform/infrastructure
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
-          echo subscription_id="${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" > terraform.tfvars
-          echo tenant_id="${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}" >> terraform.tfvars
+          echo subscription_id=\"$SUBSCRIPTION_ID\"       >  terraform.tfvars
+          echo tenant_id=\"$TENANT_ID\"                   >> terraform.tfvars
 
       - name: Terraform Validate
         working-directory: ./src/terraform/infrastructure
@@ -326,13 +396,21 @@ jobs:
 
       - name: Terraform Plan
         working-directory: ./src/terraform/infrastructure
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
-          terraform plan -out=tfplan
+          terraform plan \
+            -out=tfplan
 
       - name: Terraform Apply
         working-directory: ./src/terraform/infrastructure
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
-          terraform apply -auto-approve tfplan
+          terraform apply \
+            -auto-approve tfplan
 
       - name: Terraform Format & Lockfile Update
         working-directory: ./src/terraform/infrastructure
@@ -351,3 +429,4 @@ jobs:
             git commit -m "chore: terraform fmt and lockfile update"
             git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
             git push origin HEAD:main
+          fi
