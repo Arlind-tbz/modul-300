@@ -155,7 +155,7 @@ resource "azurerm_container_app" "backend" {
 
       env {
         name  = "MYSQL_HOST"
-        value = "${var.project_name}-db.internal"
+        value = "${azurerm_container_app.db.name}.${azurerm_container_app_environment.env.name}.internal"
       }
 
       env {
@@ -275,7 +275,7 @@ resource "azurerm_container_app" "frontend" {
 
       env {
         name  = "BACKEND_HOST"
-        value = "${var.project_name}-backend.internal"
+        value = "${azurerm_container_app.backend.name}.${azurerm_container_app_environment.env.name}.internal"
       }
     }
   }
