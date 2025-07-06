@@ -225,6 +225,17 @@ resource "azurerm_container_app" "db" {
         name        = "MYSQL_ROOT_PASSWORD"
         secret_name = "mysql-root-password"
       }
+
+      volume_mounts {
+        name      = "ephemeral-storage"
+        mount_path = "/var/lib/mysql"
+      }
+    }
+
+    volume {
+      name = "ephemeral-storage"
+
+      storage_type = "EmptyDir"
     }
   }
 }
@@ -276,5 +287,93 @@ resource "azurerm_container_app" "frontend" {
         value = "${var.project_name}-backend"
       }
     }
+  }
+}
+
+resource "azurerm_log_analytics_workspace" "main" {
+  name                = "${var.project_name}-logs"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.infra_rg.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+}
+
+resource "azurerm_application_insights" "main" {
+  name                = "${var.project_name}-appinsights"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.infra_rg.name
+  workspace_id        = azurerm_log_analytics_workspace.main.id
+  application_type    = "web"
+}
+
+resource "azurerm_monitor_action_group" "main" {
+  name                = "${var.project_name}-alerts"
+  resource_group_name = azurerm_resource_group.infra_rg.name
+  short_name          = "alerts"
+
+  email_receiver {
+    name          = "admin"
+    email_address = "arlind@sulej.ch"
+  }
+}
+
+resource "azurerm_monitor_metric_alert" "backend_health" {
+  name                = "${var.project_name}-backend-unhealthy"
+  resource_group_name = azurerm_resource_group.infra_rg.name
+  scopes              = [azurerm_container_app.backend.id]
+
+  criteria {
+    metric_namespace = "Microsoft.App/containerApps"
+    metric_name      = "Replicas"
+    aggregation      = "Average"
+    operator         = "LessThan"
+    threshold        = 1
+  }
+
+  action {
+    action_group_id = azurerm_monitor_action_group.main.id
+  }
+}
+
+resource "azurerm_monitor_metric_alert" "frontend_error_rate" {
+  name                = "${var.project_name}-frontend-5xx"
+  resource_group_name = azurerm_resource_group.infra_rg.name
+  scopes              = [azurerm_container_app.frontend.id]
+
+  criteria {
+    metric_namespace = "Microsoft.App/containerApps"
+    metric_name      = "Requests"
+    aggregation      = "Total"
+    operator         = "GreaterThan"
+    threshold        = 100
+
+    dimension {
+      name     = "statusCodeCategory"
+      operator = "Include"
+      values   = ["5xx"]
+    }
+  }
+
+  action {
+    action_group_id = azurerm_monitor_action_group.main.id
+  }
+}
+
+
+resource "azurerm_monitor_metric_alert" "db_high_cpu" {
+  name                = "${var.project_name}-db-high-cpu"
+  resource_group_name = azurerm_resource_group.infra_rg.name
+  scopes              = [azurerm_container_app.db.id]
+
+  criteria {
+    metric_namespace = "Microsoft.App/containerApps"
+    metric_name      = "CpuUsagePercentage"
+    aggregation      = "Average"
+    operator         = "GreaterThan"
+    threshold        = 80
+  }
+
+  action {
+    action_group_id = azurerm_monitor_action_group.main.id
   }
 }
