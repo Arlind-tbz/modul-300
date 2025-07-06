@@ -390,6 +390,15 @@ jobs:
           echo subscription_id=\"$SUBSCRIPTION_ID\"       >  terraform.tfvars
           echo tenant_id=\"$TENANT_ID\"                   >> terraform.tfvars
 
+      - name: Import Microsoft.App Resource Provider
+        working-directory: ./src/terraform/infrastructure
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+        run: |
+          terraform import \
+            azurerm_resource_provider_registration.container_apps \
+            "/subscriptions/$SUBSCRIPTION_ID/providers/Microsoft.App" || echo "Microsoft.App already registered or import failed"
+
       - name: Terraform Validate
         working-directory: ./src/terraform/infrastructure
         run: terraform validate
@@ -402,15 +411,6 @@ jobs:
         run: |
           terraform plan \
             -out=tfplan
-
-      - name: Import Microsoft.App Resource Provider
-        working-directory: ./src/terraform/storage
-        env:
-          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-        run: |
-          terraform import \
-            azurerm_resource_provider_registration.container_apps \
-            "/subscriptions/$SUBSCRIPTION_ID/providers/Microsoft.App" || echo "Microsoft.App already registered or import failed"
 
       - name: Terraform Apply
         working-directory: ./src/terraform/infrastructure
