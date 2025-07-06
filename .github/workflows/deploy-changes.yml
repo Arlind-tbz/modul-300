@@ -51,6 +51,13 @@ jobs:
           echo mysql_database=\"$MYSQL_DATABASE\"         >> terraform.tfvars
 
       - name: Mask Secrets
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
         run: |
           echo "::add-mask::${{ secrets.MYSQL_ROOT_PASSWORD }}"
           echo "::add-mask::${{ secrets.MYSQL_USER }}"
@@ -65,8 +72,6 @@ jobs:
       - name: Import Resource Group
         working-directory: ./src/terraform/storage
         env:
-          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
           STORAGE_RG_NAME: terraform-storage-rg
         run: |
           terraform import \
@@ -76,8 +81,6 @@ jobs:
       - name: Import ACR
         working-directory: ./src/terraform/storage
         env:
-          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
           STORAGE_RG_NAME: terraform-storage-rg
           ACR_NAME: arlinddevacr
         run: |
@@ -88,8 +91,6 @@ jobs:
       - name: Import Storage Account
         working-directory: ./src/terraform/storage
         env:
-          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
           STORAGE_RG_NAME: terraform-storage-rg
           STORAGE_ACCOUNT_NAME: tfstatearlindsulejmani
         run: |
@@ -100,8 +101,6 @@ jobs:
       - name: Import Storage Container
         working-directory: ./src/terraform/storage
         env:
-          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
           STORAGE_RG_NAME: terraform-storage-rg
           STORAGE_ACCOUNT_NAME: tfstatearlindsulejmani
         run: |
@@ -112,8 +111,6 @@ jobs:
       - name: Import Key Vault
         working-directory: ./src/terraform/storage
         env:
-          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
           STORAGE_RG_NAME: terraform-storage-rg
         run: |
           terraform import \
@@ -122,9 +119,6 @@ jobs:
 
       - name: Import Key Vault mysql_root_password Secret
         working-directory: ./src/terraform/storage
-        env:
-          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
           mysql_root_password_uri=$(az keyvault secret list-versions \
             --vault-name arlindsulejmanitfvars \
@@ -139,9 +133,6 @@ jobs:
 
       - name: Import Key Vault mysql_user Secret
         working-directory: ./src/terraform/storage
-        env:
-          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
           mysql_user_uri=$(az keyvault secret list-versions \
             --vault-name arlindsulejmanitfvars \
@@ -156,9 +147,6 @@ jobs:
 
       - name: Import Key Vault mysql_password Secret
         working-directory: ./src/terraform/storage
-        env:
-          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
           mysql_password_uri=$(az keyvault secret list-versions \
             --vault-name arlindsulejmanitfvars \
@@ -173,9 +161,6 @@ jobs:
 
       - name: Import Key Vault mysql_database Secret
         working-directory: ./src/terraform/storage
-        env:
-          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
           mysql_database_uri=$(az keyvault secret list-versions \
             --vault-name arlindsulejmanitfvars \
@@ -190,9 +175,6 @@ jobs:
 
       - name: Import Key Vault acr_username Secret
         working-directory: ./src/terraform/storage
-        env:
-          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
           acr_username_uri=$(az keyvault secret list-versions \
             --vault-name arlindsulejmanitfvars \
@@ -207,9 +189,6 @@ jobs:
 
       - name: Import Key Vault acr-password Secret
         working-directory: ./src/terraform/storage
-        env:
-          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
           acr_password_uri=$(az keyvault secret list-versions \
             --vault-name arlindsulejmanitfvars \
@@ -228,18 +207,12 @@ jobs:
 
       - name: Terraform Plan
         working-directory: ./src/terraform/storage
-        env:
-          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
           terraform plan \
             -out=tfplan
 
       - name: Terraform Apply
         working-directory: ./src/terraform/storage
-        env:
-          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
           terraform apply \
             -auto-approve tfplan
@@ -396,18 +369,12 @@ jobs:
 
       - name: Terraform Plan
         working-directory: ./src/terraform/infrastructure
-        env:
-          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
           terraform plan \
             -out=tfplan
 
       - name: Terraform Apply
         working-directory: ./src/terraform/infrastructure
-        env:
-          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
-          TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
         run: |
           terraform apply \
             -auto-approve tfplan

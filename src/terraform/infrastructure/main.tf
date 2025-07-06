@@ -40,30 +40,6 @@ resource "azurerm_resource_group" "infra_rg" {
   location = var.location
 }
 
-# --- Virtual Network & Subnet ---
-resource "azurerm_virtual_network" "vnet" {
-  name                = var.vnet_name
-  address_space       = ["10.0.0.0/16"]
-  location            = var.location
-  resource_group_name = azurerm_resource_group.infra_rg.name
-}
-
-resource "azurerm_subnet" "subnet" {
-  name                 = var.subnet_name
-  resource_group_name  = azurerm_resource_group.infra_rg.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes     = ["10.0.1.0/24"]
-
-  delegation {
-    name = "delegation"
-
-    service_delegation {
-      name    = "Microsoft.App/environments"
-      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
-    }
-  }
-}
-
 # --- User Assigned Identities ---
 resource "azurerm_user_assigned_identity" "frontend_identity" {
   name                = "${var.project_name}-frontend-id"
@@ -107,7 +83,7 @@ resource "azurerm_container_app" "backend" {
   ingress {
     external_enabled = false
     target_port      = 5000
-    transport        = "auto"
+    transport        = "tcp"
 
     traffic_weight {
       percentage      = 100
@@ -155,7 +131,7 @@ resource "azurerm_container_app" "backend" {
 
       env {
         name  = "MYSQL_HOST"
-        value = "${azurerm_container_app.db.name}.${azurerm_container_app_environment.env.name}.internal"
+        value = "${var.project_name}-db"
       }
 
       env {
@@ -193,7 +169,7 @@ resource "azurerm_container_app" "db" {
   ingress {
     external_enabled = false
     target_port      = 3306
-    transport        = "auto"
+    transport        = "tcp"
 
     traffic_weight {
       percentage      = 100
@@ -275,7 +251,7 @@ resource "azurerm_container_app" "frontend" {
 
       env {
         name  = "BACKEND_HOST"
-        value = "${azurerm_container_app.backend.name}.${azurerm_container_app_environment.env.name}.internal"
+        value = "${var.project_name}-backend"
       }
     }
   }

@@ -22,30 +22,6 @@ variable "location" {
   default     = "switzerlandnorth"
 }
 
-variable "vnet_name" {
-  default = "infra-vnet"
-}
-
-variable "subnet_name" {
-  default = "infra-subnet"
-}
-
-variable "nic_name" {
-  default = "infra-nic"
-}
-
-variable "vm_name" {
-  default = "infra-vm"
-}
-
-variable "admin_username" {
-  default = "azureuser"
-}
-
-variable "vm_size" {
-  default = "Standard_B1s"
-}
-
 variable "subscription_id" {
   description = "Azure subscription ID"
   type        = string
@@ -60,12 +36,6 @@ variable "acr_name" {
   description = "Globally unique name for Azure Container Registry"
   type        = string
   default     = "arlinddevacr"
-}
-
-variable "acr_resource_group" {
-  description = "Resource group name where the ACR is located"
-  type        = string
-  default     = "terraform-storage-rg"
 }
 
 variable "project_name" {
