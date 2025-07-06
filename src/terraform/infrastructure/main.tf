@@ -347,22 +347,3 @@ resource "azurerm_monitor_metric_alert" "frontend_error_rate" {
     action_group_id = azurerm_monitor_action_group.main.id
   }
 }
-
-
-resource "azurerm_monitor_metric_alert" "db_high_cpu" {
-  name                = "${var.project_name}-db-high-cpu"
-  resource_group_name = azurerm_resource_group.infra_rg.name
-  scopes              = [azurerm_container_app.db.id]
-
-  criteria {
-    metric_namespace = "Microsoft.App/containerApps"
-    metric_name      = "CpuUsagePercentage"
-    aggregation      = "Average"
-    operator         = "GreaterThan"
-    threshold        = 80
-  }
-
-  action {
-    action_group_id = azurerm_monitor_action_group.main.id
-  }
-}
