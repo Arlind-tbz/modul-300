@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'src/terraform/**'
+      - 'src/**'
       - '.github/workflows/deploy-changes.yml'
   workflow_dispatch:
 
