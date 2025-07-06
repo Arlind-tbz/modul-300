@@ -70,6 +70,7 @@ resource "azurerm_container_app_environment" "env" {
 
 # --- Backend Container App ---
 resource "azurerm_container_app" "backend" {
+  depends_on = [azurerm_container_app.db]
   name                         = "${var.project_name}-backend"
   container_app_environment_id = azurerm_container_app_environment.env.id
   resource_group_name          = azurerm_resource_group.infra_rg.name
@@ -210,6 +211,7 @@ resource "azurerm_container_app" "db" {
 
 # --- Frontend Container App ---
 resource "azurerm_container_app" "frontend" {
+  depends_on = [azurerm_container_app.backend]
   name                         = "${var.project_name}-frontend"
   container_app_environment_id = azurerm_container_app_environment.env.id
   resource_group_name          = azurerm_resource_group.infra_rg.name
