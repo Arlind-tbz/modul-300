@@ -19,6 +19,26 @@ data "azurerm_container_registry" "acr" {
   resource_group_name = var.storage_resource_group_name
 }
 
+data "azurerm_key_vault_secret" "mysql_user" {
+  name         = "mysql-user"
+  key_vault_id = data.azurerm_key_vault.tfvars.id
+}
+
+data "azurerm_key_vault_secret" "mysql_password" {
+  name         = "mysql-password"
+  key_vault_id = data.azurerm_key_vault.tfvars.id
+}
+
+data "azurerm_key_vault_secret" "mysql_database" {
+  name         = "mysql-database"
+  key_vault_id = data.azurerm_key_vault.tfvars.id
+}
+
+data "azurerm_key_vault_secret" "mysql_root_password" {
+  name         = "mysql-root-password"
+  key_vault_id = data.azurerm_key_vault.tfvars.id
+}
+
 # --- ACR Credentials from Key Vault ---
 data "azurerm_key_vault_secret" "acr_username" {
   name         = "acr-username"
@@ -105,22 +125,22 @@ resource "azurerm_container_app" "backend" {
 
   secret {
     name  = "mysql-user"
-    value = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.tfvars.name};SecretName=mysql-user)"
-  }
-
-  secret {
-    name  = "mysql-database"
-    value = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.tfvars.name};SecretName=mysql-database)"
+    value = data.azurerm_key_vault_secret.mysql_user.value
   }
 
   secret {
     name  = "mysql-password"
-    value = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.tfvars.name};SecretName=mysql-password)"
+    value = data.azurerm_key_vault_secret.mysql_password.value
+  }
+
+  secret {
+    name  = "mysql-database"
+    value = data.azurerm_key_vault_secret.mysql_database.value
   }
 
   secret {
     name  = "mysql-root-password"
-    value = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.tfvars.name};SecretName=mysql-root-password)"
+    value = data.azurerm_key_vault_secret.mysql_root_password.value
   }
 
   template {
@@ -128,7 +148,7 @@ resource "azurerm_container_app" "backend" {
       name   = "backend"
       image  = "${data.azurerm_container_registry.acr.login_server}/backend:latest"
       cpu    = 0.5
-      memory = "1.0Gi"
+      memory = "1Gi"
 
       env {
         name  = "MYSQL_HOST"
@@ -191,7 +211,7 @@ resource "azurerm_container_app" "db" {
 
   secret {
     name  = "mysql-root-password"
-    value = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.tfvars.name};SecretName=mysql-root-password)"
+    value = data.azurerm_key_vault_secret.mysql_root_password.value
   }
 
   template {
@@ -199,7 +219,7 @@ resource "azurerm_container_app" "db" {
       name   = "db"
       image  = "${data.azurerm_container_registry.acr.login_server}/db:latest"
       cpu    = 0.5
-      memory = "1.0Gi"
+      memory = "1Gi"
 
       env {
         name        = "MYSQL_ROOT_PASSWORD"
@@ -249,7 +269,7 @@ resource "azurerm_container_app" "frontend" {
       name   = "frontend"
       image  = "${data.azurerm_container_registry.acr.login_server}/frontend:latest"
       cpu    = 0.5
-      memory = "1.0Gi"
+      memory = "1Gi"
 
       env {
         name  = "BACKEND_HOST"
