@@ -43,16 +43,29 @@ def get_connection(delay=2):
 @app.route("/api/healthcheck", methods=["GET"])
 def healthcheck():
     """Healthcheck endpoint that reports MySQL status."""
-    if last_db_error:
+    try:
+        conn = mysql.connector.connect(
+            host=os.getenv("MYSQL_HOST", "mysql"),
+            user=os.getenv("MYSQL_USER", "root"),
+            password=os.getenv("MYSQL_PASSWORD", "root"),
+            database=os.getenv("MYSQL_DATABASE", "todo_db")
+        )
+        if conn.is_connected():
+            conn.close()
+            return jsonify({"status": "healthy", "db_connected": True}), 200
+        else:
+            return jsonify({
+                "status": "unhealthy",
+                "db_connected": False,
+                "error": "Connection object created but not connected"
+            }), 503
+    except Error as e:
         return jsonify({
             "status": "unhealthy",
             "db_connected": False,
-            "error": last_db_error["message"]
+            "error": str(e)
         }), 503
-    return jsonify({
-        "status": "healthy",
-        "db_connected": True
-    })
+
 
 @app.route("/api/tasks", methods=["GET"])
 def get_tasks():
