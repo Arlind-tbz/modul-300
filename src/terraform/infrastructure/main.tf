@@ -394,11 +394,3 @@ resource "azurerm_backup_policy_file_share" "file_share_policy" {
     count = 7
   }
 }
-
-resource "azurerm_backup_protected_file_share" "mysql_data_backup" {
-  resource_group_name      = azurerm_resource_group.infra_rg.name
-  recovery_vault_name      = azurerm_recovery_services_vault.backup_vault.name
-  source_storage_account_id = azurerm_storage_account.mysql_storage.id
-  source_file_share_name   = azurerm_storage_share.mysql_data.name
-  backup_policy_id         = azurerm_backup_policy_file_share.file_share_policy.id
-}
