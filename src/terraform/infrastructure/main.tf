@@ -171,11 +171,23 @@ resource "azurerm_container_app" "backend" {
 
   template {
     min_replicas = 1
+
+    volume {
+      name         = "mysql-data-volume"
+      storage_name = azurerm_container_app_environment_storage.mysql_storage.name
+      storage_type = "AzureFile"
+    }
+
     container {
       name   = "backend"
       image  = "${data.azurerm_container_registry.acr.login_server}/backend:latest"
       cpu    = 0.5
       memory = "1Gi"
+
+      volume_mounts {
+        name = "mysql-data-volume"
+        path = "/app/"
+      }
 
       env {
         name  = "MYSQL_HOST"
@@ -247,12 +259,6 @@ resource "azurerm_container_app" "db" {
   template {
     min_replicas = 1
 
-    #    volume {
-    #      name         = "mysql-data-volume"
-    #      storage_name = azurerm_container_app_environment_storage.mysql_storage.name
-    #      storage_type = "AzureFile"
-    #    }
-
     container {
       name   = "db"
       image  = "${data.azurerm_container_registry.acr.login_server}/db:latest"
@@ -263,11 +269,6 @@ resource "azurerm_container_app" "db" {
         name        = "MYSQL_ROOT_PASSWORD"
         secret_name = "mysql-root-password"
       }
-
-      #      volume_mounts {
-      #        name = "mysql-data-volume"
-      #        path = "/var/lib/mysql"
-      #      }
     }
   }
 }
