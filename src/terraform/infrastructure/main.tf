@@ -98,10 +98,9 @@ resource "azurerm_user_assigned_identity" "db_identity" {
 }
 
 resource "azurerm_container_app_environment" "env" {
-  name                       = "${var.project_name}-env"
-  location                   = var.location
-  resource_group_name        = azurerm_resource_group.infra_rg.name
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
+  name                = "${var.project_name}-env"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.infra_rg.name
 
   depends_on = [azurerm_resource_provider_registration.container_apps]
 }
@@ -210,10 +209,6 @@ resource "azurerm_container_app" "backend" {
         name        = "MYSQL_DATABASE"
         secret_name = "mysql-database"
       }
-      env {
-        name  = "APPLICATIONINSIGHTS_CONNECTION_STRING"
-        value = azurerm_application_insights.main.connection_string
-      }
     }
   }
 }
@@ -319,28 +314,8 @@ resource "azurerm_container_app" "frontend" {
         name  = "BACKEND_HOST"
         value = "${var.project_name}-backend"
       }
-      env {
-        name  = "APPLICATIONINSIGHTS_CONNECTION_STRING"
-        value = azurerm_application_insights.main.connection_string
-      }
     }
   }
-}
-
-resource "azurerm_log_analytics_workspace" "main" {
-  name                = "${var.project_name}-logs"
-  location            = var.location
-  resource_group_name = azurerm_resource_group.infra_rg.name
-  sku                 = "PerGB2018"
-  retention_in_days   = 30
-}
-
-resource "azurerm_application_insights" "main" {
-  name                = "${var.project_name}-appinsights"
-  location            = var.location
-  resource_group_name = azurerm_resource_group.infra_rg.name
-  workspace_id        = azurerm_log_analytics_workspace.main.id
-  application_type    = "web"
 }
 
 resource "azurerm_monitor_action_group" "main" {
