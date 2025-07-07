@@ -394,31 +394,3 @@ resource "azurerm_monitor_metric_alert" "frontend_error_rate" {
     action_group_id = azurerm_monitor_action_group.main.id
   }
 }
-
-resource "azurerm_monitor_diagnostic_setting" "frontend_logs" {
-  name                       = "diag-${var.project_name}-frontend"
-  target_resource_id         = azurerm_container_app.frontend.id
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
-
-  enabled_log {
-    category = "ContainerAppConsoleLogs"
-  }
-
-  enabled_metric {
-    category = "AllMetrics"
-  }
-}
-
-resource "azurerm_monitor_diagnostic_setting" "backend_logs" {
-  name                       = "diag-${var.project_name}-backend"
-  target_resource_id         = azurerm_container_app.backend.id
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
-
-  enabled_log {
-    category = "ContainerAppConsoleLogs"
-  }
-
-  enabled_metric {
-    category = "AllMetrics"
-  }
-}
