@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sqlite3
 import os
-import time
+import shutil
 import logging
 
 logging.basicConfig(
@@ -14,13 +14,27 @@ logging.basicConfig(
 app = Flask(__name__)
 CORS(app)
 
-DB_PATH = "/app/data/todo.db"
+LOCAL_DB_PATH = "/todo.db"
+BACKUP_DB_PATH = "/app/data/todo.db"
+
+def backup_database():
+    """Copy the working local DB to the backup location."""
+    try:
+        shutil.copy2(LOCAL_DB_PATH, BACKUP_DB_PATH)
+        logging.info("Database backed up to Azure share.")
+    except Exception as e:
+        logging.error(f"Failed to backup DB: {e}")
 
 def ensure_db_exists():
-    """Create the /app/data folder, the SQLite database file, and the tasks table if they don't exist."""
+    """Ensure /todo.db exists. If backup exists, copy from it."""
     try:
-        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-        conn = sqlite3.connect(DB_PATH)
+        os.makedirs(os.path.dirname(BACKUP_DB_PATH), exist_ok=True)
+
+        if not os.path.exists(LOCAL_DB_PATH) and os.path.exists(BACKUP_DB_PATH):
+            shutil.copy2(BACKUP_DB_PATH, LOCAL_DB_PATH)
+            logging.info("Restored DB from Azure share to local.")
+
+        conn = sqlite3.connect(LOCAL_DB_PATH)
         cursor = conn.cursor()
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS tasks (
@@ -30,14 +44,15 @@ def ensure_db_exists():
         ''')
         conn.commit()
         conn.close()
-        logging.info("Database directory, file, and table ensured.")
+        logging.info("Local database and table ensured.")
+        backup_database()
     except Exception as e:
         logging.error(f"SQLite DB initialization failed: {e}")
 
 def get_connection():
     """Get a new SQLite connection."""
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = sqlite3.connect(LOCAL_DB_PATH)
         conn.row_factory = sqlite3.Row
         return conn
     except sqlite3.Error as e:
@@ -66,8 +81,8 @@ def get_tasks():
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM tasks")
         tasks = [dict(row) for row in cursor.fetchall()]
-        logging.info(f"Fetched {len(tasks)} tasks.")
         conn.close()
+        logging.info(f"Fetched {len(tasks)} tasks.")
         return jsonify(tasks)
     except sqlite3.Error as e:
         logging.exception("Error fetching tasks")
@@ -81,8 +96,9 @@ def add_task():
         cursor = conn.cursor()
         cursor.execute("INSERT INTO tasks (title) VALUES (?)", (data["title"],))
         conn.commit()
-        logging.info(f"Task added with title: {data['title']}")
         conn.close()
+        logging.info(f"Task added with title: {data['title']}")
+        backup_database()
         return jsonify({"message": "Task added"}), 201
     except sqlite3.Error as e:
         logging.exception("Error adding task")
@@ -95,8 +111,9 @@ def delete_task(task_id):
         cursor = conn.cursor()
         cursor.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
         conn.commit()
-        logging.info(f"Task with ID {task_id} deleted.")
         conn.close()
+        logging.info(f"Task with ID {task_id} deleted.")
+        backup_database()
         return jsonify({"message": "Task deleted"})
     except sqlite3.Error as e:
         logging.exception("Error deleting task")
