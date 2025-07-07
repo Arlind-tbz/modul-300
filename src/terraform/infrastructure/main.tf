@@ -4,16 +4,13 @@ provider "azurerm" {
   tenant_id       = var.tenant_id
 }
 
-# --- Key Vault Lookup ---
 data "azurerm_key_vault" "tfvars" {
   name                = var.key_vault_name
   resource_group_name = var.storage_resource_group_name
 }
 
-# --- Client Config (for role assignments) ---
 data "azurerm_client_config" "current" {}
 
-# --- ACR Lookup ---
 data "azurerm_container_registry" "acr" {
   name                = var.acr_name
   resource_group_name = var.storage_resource_group_name
@@ -39,7 +36,6 @@ data "azurerm_key_vault_secret" "mysql_root_password" {
   key_vault_id = data.azurerm_key_vault.tfvars.id
 }
 
-# --- ACR Credentials from Key Vault ---
 data "azurerm_key_vault_secret" "acr_username" {
   name         = "acr-username"
   key_vault_id = data.azurerm_key_vault.tfvars.id
@@ -54,13 +50,35 @@ resource "azurerm_resource_provider_registration" "container_apps" {
   name = "Microsoft.App"
 }
 
-# --- Resource Group ---
 resource "azurerm_resource_group" "infra_rg" {
   name     = var.resource_group_name
   location = var.location
 }
 
-# --- User Assigned Identities ---
+resource "azurerm_storage_account" "mysql_storage" {
+  name                     = "${replace(var.project_name, "-", "")}mysqlsa"
+  resource_group_name      = azurerm_resource_group.infra_rg.name
+  location                 = var.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+  account_kind             = "StorageV2"
+
+  min_tls_version          = "TLS1_2"
+
+  tags = {
+    environment = "production"
+    purpose     = "mysql-data"
+  }
+}
+
+resource "azurerm_storage_share" "mysql_data" {
+  name                 = "mysql-data"
+  storage_account_id   = azurerm_storage_account.mysql_storage.id
+  quota                = 1
+
+  depends_on = [azurerm_storage_account.mysql_storage]
+}
+
 resource "azurerm_user_assigned_identity" "frontend_identity" {
   name                = "${var.project_name}-frontend-id"
   location            = var.location
@@ -79,7 +97,6 @@ resource "azurerm_user_assigned_identity" "db_identity" {
   resource_group_name = azurerm_resource_group.infra_rg.name
 }
 
-# --- Container App Environment ---
 resource "azurerm_container_app_environment" "env" {
   name                = "${var.project_name}-env"
   location            = var.location
@@ -88,7 +105,15 @@ resource "azurerm_container_app_environment" "env" {
   depends_on = [azurerm_resource_provider_registration.container_apps]
 }
 
-# --- Backend Container App ---
+resource "azurerm_container_app_environment_storage" "mysql_storage" {
+  name                         = "mysql-data-storage"
+  container_app_environment_id = azurerm_container_app_environment.env.id
+  account_name                 = azurerm_storage_account.mysql_storage.name
+  share_name                   = azurerm_storage_share.mysql_data.name
+  access_key                   = azurerm_storage_account.mysql_storage.primary_access_key
+  access_mode                  = "ReadWrite"
+}
+
 resource "azurerm_container_app" "backend" {
   depends_on                   = [azurerm_container_app.db]
   name                         = "${var.project_name}-backend"
@@ -176,7 +201,6 @@ resource "azurerm_container_app" "backend" {
   }
 }
 
-# --- DB Container App ---
 resource "azurerm_container_app" "db" {
   name                         = "${var.project_name}-db"
   container_app_environment_id = azurerm_container_app_environment.env.id
@@ -217,6 +241,13 @@ resource "azurerm_container_app" "db" {
 
   template {
     min_replicas = 1
+
+    volume {
+      name         = "mysql-data-volume"
+      storage_name = azurerm_container_app_environment_storage.mysql_storage.name
+      storage_type = "AzureFile"
+    }
+
     container {
       name   = "db"
       image  = "${data.azurerm_container_registry.acr.login_server}/db:latest"
@@ -227,11 +258,15 @@ resource "azurerm_container_app" "db" {
         name        = "MYSQL_ROOT_PASSWORD"
         secret_name = "mysql-root-password"
       }
+
+      volume_mounts {
+        name = "mysql-data-volume"
+        path = "/var/lib/mysql"
+      }
     }
   }
 }
 
-# --- Frontend Container App ---
 resource "azurerm_container_app" "frontend" {
   depends_on                   = [azurerm_container_app.backend]
   name                         = "${var.project_name}-frontend"

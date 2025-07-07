@@ -4,16 +4,13 @@ provider "azurerm" {
   tenant_id       = var.tenant_id
 }
 
-# Data source to get current client config
 data "azurerm_client_config" "current" {}
 
-# Create dedicated resource group for storage
 resource "azurerm_resource_group" "storage_rg" {
   name     = var.resource_group_name
   location = var.location
 }
 
-# Key Vault for storing sensitive tfvars
 resource "azurerm_key_vault" "tfvars" {
   name                = var.key_vault_name
   location            = azurerm_resource_group.storage_rg.location
@@ -21,7 +18,6 @@ resource "azurerm_key_vault" "tfvars" {
   tenant_id           = data.azurerm_client_config.current.tenant_id
   sku_name            = "standard"
 
-  # Disable purge protection for easier management
   purge_protection_enabled   = false
   soft_delete_retention_days = 7
 
