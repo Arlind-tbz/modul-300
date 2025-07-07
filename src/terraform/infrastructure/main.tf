@@ -63,7 +63,7 @@ resource "azurerm_storage_account" "mysql_storage" {
   account_replication_type = "LRS"
   account_kind             = "StorageV2"
 
-  min_tls_version          = "TLS1_2"
+  min_tls_version = "TLS1_2"
 
   tags = {
     environment = "production"
@@ -72,9 +72,9 @@ resource "azurerm_storage_account" "mysql_storage" {
 }
 
 resource "azurerm_storage_share" "mysql_data" {
-  name                 = "mysql-data"
-  storage_account_id   = azurerm_storage_account.mysql_storage.id
-  quota                = 1
+  name               = "mysql-data"
+  storage_account_id = azurerm_storage_account.mysql_storage.id
+  quota              = 1
 
   depends_on = [azurerm_storage_account.mysql_storage]
 }
