@@ -400,21 +400,21 @@ resource "azurerm_monitor_diagnostic_setting" "frontend_logs" {
   target_resource_id         = azurerm_container_app.frontend.id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
 
-  log {
+  enabled_log {
     category = "ContainerAppConsoleLogs"
-    enabled  = true
 
     retention_policy {
-      enabled = false
+      enabled = true
+      days    = 30
     }
   }
 
   metric {
     category = "AllMetrics"
-    enabled  = true
 
     retention_policy {
-      enabled = false
+      enabled = true
+      days    = 30
     }
   }
 }
@@ -424,21 +424,21 @@ resource "azurerm_monitor_diagnostic_setting" "backend_logs" {
   target_resource_id         = azurerm_container_app.backend.id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
 
-  log {
+  enabled_log {
     category = "ContainerAppConsoleLogs"
-    enabled  = true
 
     retention_policy {
-      enabled = false
+      enabled = true
+      days    = 30
     }
   }
 
   metric {
     category = "AllMetrics"
-    enabled  = true
 
     retention_policy {
-      enabled = false
+      enabled = true
+      days    = 30
     }
   }
 }
