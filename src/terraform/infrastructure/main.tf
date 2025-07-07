@@ -370,3 +370,35 @@ resource "azurerm_monitor_metric_alert" "frontend_error_rate" {
     action_group_id = azurerm_monitor_action_group.main.id
   }
 }
+
+resource "azurerm_recovery_services_vault" "backup_vault" {
+  name                = "${var.project_name}-vault"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.infra_rg.name
+  sku                 = "Standard"
+  soft_delete_enabled = true
+}
+
+resource "azurerm_backup_policy_file_share" "file_share_policy" {
+  name                = "daily-policy"
+  resource_group_name = azurerm_resource_group.infra_rg.name
+  recovery_vault_name = azurerm_recovery_services_vault.backup_vault.name
+
+  timezone = "UTC"
+  backup {
+    frequency = "Daily"
+    time      = "23:00"
+  }
+
+  retention_daily {
+    count = 7
+  }
+}
+
+resource "azurerm_backup_protected_file_share" "mysql_data_backup" {
+  resource_group_name      = azurerm_resource_group.infra_rg.name
+  recovery_vault_name      = azurerm_recovery_services_vault.backup_vault.name
+  source_storage_account_id = azurerm_storage_account.mysql_storage.id
+  source_file_share_name   = azurerm_storage_share.mysql_data.name
+  backup_policy_id         = azurerm_backup_policy_file_share.file_share_policy.id
+}
