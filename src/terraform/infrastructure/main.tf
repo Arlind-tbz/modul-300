@@ -404,9 +404,8 @@ resource "azurerm_monitor_diagnostic_setting" "frontend_logs" {
     category = "ContainerAppConsoleLogs"
   }
 
-  metric {
+  enabled_metric {
     category = "AllMetrics"
-
   }
 }
 
@@ -419,7 +418,7 @@ resource "azurerm_monitor_diagnostic_setting" "backend_logs" {
     category = "ContainerAppConsoleLogs"
   }
 
-  metric {
+  enabled_metric {
     category = "AllMetrics"
   }
 }
