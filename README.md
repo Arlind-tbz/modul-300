@@ -177,7 +177,22 @@ Für die Anwendung selbst gibt es Health-Check-Endpunkte wie `/api/healthcheck`,
 
 ## 2.5 Preisberechnung
 
-todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo
+Dies ist meine Preisberechnung für die Infrastruktur. In realität kann es 10-15 CHF Teuer sind im Monat.
+
+| Service                   | SKU / Konfiguration        |
+| ------------------------- | -------------------------- |
+| Key Vault                 | Standard                   |
+| Storage Account           | Standard LRS, Blob         |
+| Container Registry        | Basic                      |
+| Container App (Frontend)  | 0.5 vCPU, 1 GB, 1 replica  |
+| Container App (Backend)   | 0.5 vCPU, 1 GB, 1 replica  |
+| Container App (DB)        | 0.5 vCPU, 1 GB, 1 replica  |
+| Container App Environment | 1 Instanz                  |
+| Application Insights      | Web App, 2 GB Datenvolumen |
+| Log Analytics Workspace   | 5 GB, Retention 30 Tage    |
+| Monitor Metric Alerts     | 2 Regeln                   |
+
+![Preisberechnug](/src/images/pricing-calculation.png)
 
 ---
 
