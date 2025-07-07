@@ -101,6 +101,7 @@ resource "azurerm_container_app_environment" "env" {
   name                = "${var.project_name}-env"
   location            = var.location
   resource_group_name = azurerm_resource_group.infra_rg.name
+  log_analytics_workspace_id     = azurerm_log_analytics_workspace.main.id
 
   depends_on = [azurerm_resource_provider_registration.container_apps]
 }
@@ -196,6 +197,10 @@ resource "azurerm_container_app" "backend" {
       env {
         name        = "MYSQL_DATABASE"
         secret_name = "mysql-database"
+      }
+      env {
+        name  = "APPLICATIONINSIGHTS_CONNECTION_STRING"
+        value = azurerm_application_insights.main.connection_string
       }
     }
   }
@@ -312,6 +317,10 @@ resource "azurerm_container_app" "frontend" {
       env {
         name  = "BACKEND_HOST"
         value = "${var.project_name}-backend"
+      }
+      env {
+        name  = "APPLICATIONINSIGHTS_CONNECTION_STRING"
+        value = azurerm_application_insights.main.connection_string
       }
     }
   }
