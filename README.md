@@ -437,7 +437,7 @@ Fehler werden systematisch behandelt und in drei Hauptkategorien unterteilt:
 
 Um Ausfälle oder Verbindungsprobleme abzufangen, setzen sowohl Backend als auch Frontend auf **Retry-Mechanismen** mit automatischem Wiederholversuch. Bei einem Fehler wird zunächst eine kurze Pause eingelegt (z. B. 2 Sekunden), bevor erneut versucht wird, die Verbindung aufzubauen. Dadurch können z. B. temporäre Netzwerkprobleme oder langsames Hochfahren von Diensten überbrückt werden. Im Backend passiert dies in der `get_connection()`-Funktion, im Frontend über eigene `*_with_retries()`-Funktionen für `GET`, `POST` und `DELETE`.
 
-Zusätzlich wird **Graceful Degradation** umgesetzt. Wenn das Backend nicht erreichbar ist, wird dem Benutzer eine passende Fehlermeldung angezeigt. Die Anwendung bleibt dabei weiterhin nutzbar, auch wenn manche Funktionen (z. B. Datenanzeige) ausfallen. Das Frontend prüft dafür regelmäßig über `/api/healthcheck`, ob das Backend läuft und die Datenbank erreichbar ist. Diese Prüfung erfolgt sowohl beim Start als auch bei jeder Benutzeraktion.
+Zusätzlich wird **Graceful Degradation** umgesetzt. Wenn das Backend nicht erreichbar ist, wird dem Benutzer eine passende Fehlermeldung angezeigt. Die Anwendung bleibt dabei weiterhin nutzbar, auch wenn manche Funktionen (z. B. Datenanzeige) ausfallen. Das Frontend prüft dafür regelmässig über `/api/healthcheck`, ob das Backend läuft und die Datenbank erreichbar ist. Diese Prüfung erfolgt sowohl beim Start als auch bei jeder Benutzeraktion.
 
 ## 7.3 Terraform-Fehlerbehandlung
 
@@ -490,7 +490,7 @@ Die Konfiguration ist in der Datei [`docker-compose.yml`](src/docker/docker-comp
 
 ## 8.3 Live-System
 
-Nach einem erfolgreichen Deployment in Azure wird die Anwendung unter der automatisch erzeugten Frontend-URL erreichbar gemacht. Diese URL wird über Terraform als Output ausgegeben und kann anschließend im Browser aufgerufen werden. Alle Ressourcen – Container Apps, Netzwerke, Secrets und Datenbankzugriffe – sind dann vollständig aktiv und produktionsbereit.
+Nach einem erfolgreichen Deployment in Azure wird die Anwendung unter der automatisch erzeugten Frontend-URL erreichbar gemacht. Diese URL wird über Terraform als Output ausgegeben und kann anschliessend im Browser aufgerufen werden. Alle Ressourcen – Container Apps, Netzwerke, Secrets und Datenbankzugriffe – sind dann vollständig aktiv und produktionsbereit.
 
 # 9. Sicherheitskonzept
 
@@ -504,7 +504,7 @@ Für die Kommunikation zwischen Diensten innerhalb von Azure wird auf **Managed 
 
 Die Netzwerkkonfiguration folgt dem Prinzip „so wenig offen wie nötig“. Nur das **Frontend** ist öffentlich über das Internet erreichbar. Alle anderen Komponenten – wie Backend und Datenbank – sind in einem **privaten Container-Netzwerk** isoliert und nur intern erreichbar.
 
-Auch der Zugriff auf Container-Images in der **Azure Container Registry (ACR)** ist geschützt. Hier erfolgt der Zugriff ausschließlich über Authentifizierung, z. B. per verwalteter Identität oder ACR-Zugangsdaten, die im Key Vault hinterlegt sind.
+Auch der Zugriff auf Container-Images in der **Azure Container Registry (ACR)** ist geschützt. Hier erfolgt der Zugriff ausschliesslich über Authentifizierung, z. B. per verwalteter Identität oder ACR-Zugangsdaten, die im Key Vault hinterlegt sind.
 
 ## 9.3 Zugriffskontrolle
 

@@ -1,6 +1,6 @@
-1. `Lernjournals`
-2. `Screenshots`
-3. `2.5 Preisberechnung`
-4. `10. Backup und Restore` (schwierig)
-5. `11. Monitoring und Alerting`
-6. `Selbsteinschätzung`
+1. `Screenshots`
+2. `2.5 Preisberechnung`
+3. `10. Backup und Restore` (schwierig)
+4. `11. Monitoring und Alerting`
+5. `Selbsteinschätzung`
+6. `Testprotokoll`
