@@ -26,7 +26,7 @@
    2. [2.2 Netzwerkdesign](#22-netzwerkdesign)
    3. [2.3 Werkzeuge und Entwicklung](#23-werkzeuge-und-entwicklung)
    4. [2.4 Testkonzept](#24-testkonzept)
-   5. [2.5 Preisberechnung (geplant)](#25-preisberechnung-geplant)
+   5. [2.5 Preisberechnung](#25-preisberechnung)
 4. [3. Konfiguration](#3-konfiguration)
    1. [3.1 Secrets Management](#31-secrets-management)
    2. [3.2 Service-Optimierung](#32-service-optimierung)
@@ -470,6 +470,10 @@ Ein einfacher Git-Push reicht also aus, um Änderungen automatisch in das Live-S
 ```bash
 git push origin main
 ```
+
+Auf dem GitHub Action report gibt es eine Step Summary, die die Frontend URL enthält.
+
+![Frontend GitHub Summary](/src/images/frontend-summary.png)
 
 ## 8.2 Manuelle Entwicklung
 
