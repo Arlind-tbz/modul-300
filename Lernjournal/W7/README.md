@@ -11,7 +11,11 @@
 
 ## Tagesziele
 
+- Github Actions anpassen, dass es Azure als Backend nutzt.
+
 ## Erreichte Tagesziele
+
+Keine...
 
 ## Probleme & Herausforderungen
 

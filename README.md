@@ -175,7 +175,7 @@ Für die Infrastruktur gibt es automatisierte Tests innerhalb der CI/CD-Pipeline
 
 Für die Anwendung selbst gibt es Health-Check-Endpunkte wie `/api/healthcheck`, über die geprüft wird, ob der Service erreichbar ist. Beim Bauen der Container werden automatische Tests durchgeführt, um sicherzustellen, dass die Images funktionieren. Auch beim Deployment gibt es Mechanismen, die den Vorgang bei Fehlern wiederholen, um vorübergehende Probleme abzufangen.
 
-## 2.5 Preisberechnung (geplant)
+## 2.5 Preisberechnung
 
 todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo
 
