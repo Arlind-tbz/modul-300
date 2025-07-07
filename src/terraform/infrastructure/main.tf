@@ -186,7 +186,7 @@ resource "azurerm_container_app" "backend" {
 
       volume_mounts {
         name = "mysql-data-volume"
-        path = "/app/"
+        path = "/app/data/"
       }
 
       env {

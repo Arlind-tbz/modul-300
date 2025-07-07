@@ -5,7 +5,6 @@ import os
 import time
 import logging
 
-# Setup logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
@@ -15,11 +14,12 @@ logging.basicConfig(
 app = Flask(__name__)
 CORS(app)
 
-DB_PATH = os.getenv("SQLITE_DB_PATH", "/app/todo.db")
+DB_PATH = "/app/data/todo.db"
 
 def ensure_db_exists():
-    """Create the SQLite database file and the tasks table if they don't exist."""
+    """Create the /app/data folder, the SQLite database file, and the tasks table if they don't exist."""
     try:
+        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute('''
@@ -30,8 +30,8 @@ def ensure_db_exists():
         ''')
         conn.commit()
         conn.close()
-        logging.info("Database and table ensured.")
-    except sqlite3.Error as e:
+        logging.info("Database directory, file, and table ensured.")
+    except Exception as e:
         logging.error(f"SQLite DB initialization failed: {e}")
 
 def get_connection():
@@ -49,7 +49,7 @@ def healthcheck():
     """Healthcheck endpoint that reports SQLite status."""
     try:
         conn = get_connection()
-        conn.execute("SELECT 1")  # simple query to test
+        conn.execute("SELECT 1")
         conn.close()
         return jsonify({"status": "healthy", "db_connected": True}), 200
     except Exception as e:
