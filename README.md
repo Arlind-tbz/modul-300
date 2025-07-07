@@ -64,6 +64,10 @@
    3. [9.3 Zugriffskontrolle](#93-zugriffskontrolle)
 10. [10. Backup und Restore](#10-backup-und-restore)
 11. [11. Monitoring und Alerting](#11-monitoring-und-alerting)
+       1. [11.1 Alerts \& Benachrichtigungen](#111-alerts--benachrichtigungen)
+          1. [11.1.1 Action Group](#1111-action-group)
+          2. [11.1.2 Frontend Error Rate Alert](#1112-frontend-error-rate-alert)
+       2. [11.2 Logging](#112-logging)
 12. [12. Systemvisualisierung](#12-systemvisualisierung)
     1. [13.1 Netzwerkarchitektur](#131-netzwerkarchitektur)
     2. [13.2 CI/CD Pipeline Prozess](#132-cicd-pipeline-prozess)
@@ -78,8 +82,8 @@
        1. [14.3.1 Internet-Zugriff](#1431-internet-zugriff)
     4. [14.4 Datenbeständigkeit](#144-datenbeständigkeit)
        1. [14.4.1 Persistente Speicherung](#1441-persistente-speicherung)
-    5. [14.5 Monitoring und Observability](#145-monitoring-und-observability)
-       1. [14.5.1 Azure Monitoring funktioniert](#1451-azure-monitoring-funktioniert)
+    5. [14.5 Monitoring – Alerts](#145-monitoring--alerts)
+       1. [14.5.1 Replika-Alert wird korrekt ausgelöst](#1451-replika-alert-wird-korrekt-ausgelöst)
 
 # 1. Projektbeschreibung und Ziel
 
@@ -564,7 +568,36 @@ todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo 
 
 # 11. Monitoring und Alerting
 
-todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo
+Die Anwendung nutzt ein schlankes, produktionsreifes Monitoring-Konzept basierend auf Azure Monitor Metric Alerts. Auf den Einsatz von Logging-Stacks oder zusätzlichen VMs wird bewusst verzichtet. Der Fokus liegt auf **Verfügbarkeit, Performance und Alarmierung**.
+
+### 11.1 Alerts & Benachrichtigungen
+
+#### 11.1.1 Action Group
+
+* **Name:** `${var.project_name}-alerts`
+* **Empfänger:** `arlind@sulej.ch` (E-Mail)
+
+#### 11.1.2 Frontend Error Rate Alert
+
+* **Ziel:** Container App Frontend
+* **Bedingung:** 5xx Fehler > 100 insgesamt
+* **Dimension:** `statusCodeCategory = "5xx"`
+* **Massnahme:** E-Mail-Benachrichtigung über Action Group
+
+```hcl
+metric_name = "Requests"
+aggregation = "Total"
+threshold   = 100
+dimension   = "5xx"
+```
+
+### 11.2 Logging
+
+Hier kann man alle Logs einsehen.
+
+![Container App Logs 1](/src/images/container-app-logs-1.png)
+
+![Container App Logs 2](/src/images/container-app-logs-2.png)
 
 # 12. Systemvisualisierung
 
@@ -769,7 +802,7 @@ sequenceDiagram
 * **Durchführung**:
 
   1. 3-4 Tasks hinzufügen
-  2. Browser komplett schließen
+  2. Browser komplett schliessen
   3. Nach 10 Minuten Browser neu öffnen und URL aufrufen
 * **Erwartetes Ergebnis**:
 
@@ -780,23 +813,39 @@ sequenceDiagram
   * Alle Aufgaben wurden nach dem erneuten Öffnen zuverlässig angezeigt
   * Es gab keine Anzeichen für Datenverlust
 
-## 14.5 Monitoring und Observability
+## 14.5 Monitoring – Alerts
 
-### 14.5.1 Azure Monitoring funktioniert
+### 14.5.1 Replika-Alert wird korrekt ausgelöst
 
-* **Ziel**: Infrastruktur-Monitoring erfasst echte Daten
+* **Ziel**: Azure Monitor löst Alert aus, wenn Backend nicht verfügbar ist (Replicas < 1)
+
 * **Durchführung**:
 
-  1. 10-15 verschiedene Actions im Frontend durchführen
-  2. Azure Portal → Application Insights öffnen
-  3. Request-Metriken und Logs überprüfen
+  1. Azure Portal → Monitor → Alerts geöffnet
+  2. Container App `backend` temporär gestoppt (Replikas = 0)
+  3. Beobachtet, ob der Alert `*-backend-unhealthy` ausgelöst wird
+  4. Backend wieder gestartet (Replikas = 1)
+  5. Alert-Status überprüft
+
 * **Erwartetes Ergebnis**:
 
-  * Request-Zahlen sind sichtbar
-  * Performance-Metriken werden aufgezeichnet
-  * Keine kritischen Errors in den Logs
+  * Alert `*-backend-unhealthy` erscheint bei gestoppter/fehlerhafter Backend-Instanz (Replicas < 1)
+  * Alert wird automatisch auf „Resolved“ gesetzt, sobald der Zustand behoben ist (Replicas ≥ 1)
+  * Alert enthält:
+
+    * Metrik: `Microsoft.App/containerApps – Replicas`
+    * Bedingung: `Average < 1`
+    * Verlinkung zur betroffenen Resource
+    * Eventuell Notification über Action Group (z. B. E-Mail oder Teams)
+
 * **Tatsächliches Ergebnis**:
 
-  * Aktionen wurden vollständig im Monitoring erfasst
-  * Metriken zu Performance und Requests waren einsehbar
-  * Keine kritischen Fehler im Log erkennbar
+  * Alert `*-backend-unhealthy` wurde wie erwartet bei gestoppter Backend-Instanz ausgelöst
+  * Alert basierte auf der Metrik `Microsoft.App/containerApps – Replicas`, Bedingung `Average < 1`
+  * Alert zeigte korrekte Verlinkung zur betroffenen Container App Ressource
+  * Nach Wiederherstellung des Dienstes wurde der Alert automatisch als „Resolved“ markiert
+  * Benachrichtigung über die konfigurierte Action Group (z. B. E-Mail oder Teams) wurde erfolgreich gesendet
+
+![alert-1](/src/images/alert-1.png)
+
+![alert-2](/src/images/alert-2.png)
