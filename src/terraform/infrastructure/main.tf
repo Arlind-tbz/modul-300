@@ -144,6 +144,7 @@ resource "azurerm_container_app" "backend" {
   }
 
   template {
+    min_replicas = 1
     container {
       name   = "backend"
       image  = "${data.azurerm_container_registry.acr.login_server}/backend:latest"
@@ -215,6 +216,7 @@ resource "azurerm_container_app" "db" {
   }
 
   template {
+    min_replicas = 1
     container {
       name   = "db"
       image  = "${data.azurerm_container_registry.acr.login_server}/db:latest"
@@ -265,6 +267,7 @@ resource "azurerm_container_app" "frontend" {
   }
 
   template {
+    min_replicas = 1
     container {
       name   = "frontend"
       image  = "${data.azurerm_container_registry.acr.login_server}/frontend:latest"
