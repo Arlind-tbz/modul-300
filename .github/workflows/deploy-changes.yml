@@ -399,6 +399,31 @@ jobs:
             azurerm_resource_provider_registration.container_apps \
             "/subscriptions/$SUBSCRIPTION_ID/providers/Microsoft.App" || echo "Microsoft.App already registered or import failed"
 
+      - name: Import Backup Protected File Share
+        working-directory: ./src/terraform/infrastructure
+        env:
+          SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          RESOURCE_GROUP: "terraform-infrastructure-rg"
+          VAULT_NAME: "arlindapp-vault"
+          STORAGE_ACCOUNT: "arlindappmysqlsa"
+          FILE_SHARE_NAME: "mysql-data"
+        run: |
+          # Get the backup item ID for the protected file share
+          file_share_id=$(az backup item list \
+            --resource-group "$RESOURCE_GROUP" \
+            --vault-name "$VAULT_NAME" \
+            --workload-type AzureFileShare \
+            --query "[?contains(properties.sourceResourceId, '$STORAGE_ACCOUNT') && contains(properties.friendlyName, '$FILE_SHARE_NAME')].id" \
+            --output tsv | head -n1 || true)
+
+          # Import the backup item if found
+          if [[ -n "$file_share_id" ]]; then
+            terraform import \
+              azurerm_backup_protected_file_share.mysql_data_backup "$file_share_id"
+          else
+            echo "File share backup not found or not registered in Recovery Services Vault."
+          fi
+
       - name: Terraform Validate
         working-directory: ./src/terraform/infrastructure
         run: terraform validate
