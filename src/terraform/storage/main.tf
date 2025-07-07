@@ -58,6 +58,7 @@ resource "azurerm_key_vault_secret" "mysql_database" {
   name         = "mysql-database"
   value        = var.mysql_database
   key_vault_id = azurerm_key_vault.tfvars.id
+  purposely add this to create an error
 }
 
 resource "azurerm_storage_account" "tfstate" {
