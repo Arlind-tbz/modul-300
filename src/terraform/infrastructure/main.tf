@@ -262,7 +262,7 @@ resource "azurerm_container_app" "db" {
 #      volume_mounts {
 #        name = "mysql-data-volume"
 #        path = "/var/lib/mysql"
-      }
+#      }
     }
   }
 }
