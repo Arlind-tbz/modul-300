@@ -5,3 +5,4 @@
 5. `11. Monitoring und Alerting`
 6. `Deployment static link`
 7. `Selbsteinschätzung`
+8. `fqdn output fix und dokumentation`
