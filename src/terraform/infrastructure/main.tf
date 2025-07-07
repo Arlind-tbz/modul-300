@@ -98,10 +98,10 @@ resource "azurerm_user_assigned_identity" "db_identity" {
 }
 
 resource "azurerm_container_app_environment" "env" {
-  name                = "${var.project_name}-env"
-  location            = var.location
-  resource_group_name = azurerm_resource_group.infra_rg.name
-  log_analytics_workspace_id     = azurerm_log_analytics_workspace.main.id
+  name                       = "${var.project_name}-env"
+  location                   = var.location
+  resource_group_name        = azurerm_resource_group.infra_rg.name
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
 
   depends_on = [azurerm_resource_provider_registration.container_apps]
 }
