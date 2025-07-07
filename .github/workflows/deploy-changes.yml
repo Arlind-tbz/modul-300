@@ -421,6 +421,14 @@ jobs:
           terraform apply \
             -auto-approve tfplan
 
+      - name: Output Frontend URL to Summary
+        working-directory: ./src/terraform/infrastructure
+        run: |
+          FRONTEND_URL=$(terraform output -raw frontend_url)
+          echo "## Frontend Deployment Successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Frontend URL:** [$FRONTEND_URL](https://$FRONTEND_URL)" >> $GITHUB_STEP_SUMMARY
+
       - name: Terraform Format & Lockfile Update
         working-directory: ./src/terraform/infrastructure
         run: |
