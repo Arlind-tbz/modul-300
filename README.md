@@ -68,6 +68,18 @@
     1. [13.1 Netzwerkarchitektur](#131-netzwerkarchitektur)
     2. [13.2 CI/CD Pipeline Prozess](#132-cicd-pipeline-prozess)
     3. [13.3 Datenfluss und API-Kommunikation](#133-datenfluss-und-api-kommunikation)
+13. [14. Demo / Tests](#14-demo--tests)
+    1. [14.1 Grundfunktionalität](#141-grundfunktionalität)
+       1. [14.1.1 Todo-App Basis-Funktionen](#1411-todo-app-basis-funktionen)
+    2. [14.2 Deployment und CI/CD](#142-deployment-und-cicd)
+       1. [14.2.1 Automatisches Deployment](#1421-automatisches-deployment)
+       2. [14.2.2 Pipeline bei Fehlern](#1422-pipeline-bei-fehlern)
+    3. [14.3 Öffentliche Erreichbarkeit](#143-öffentliche-erreichbarkeit)
+       1. [14.3.1 Internet-Zugriff](#1431-internet-zugriff)
+    4. [14.4 Datenbeständigkeit](#144-datenbeständigkeit)
+       1. [14.4.1 Persistente Speicherung](#1441-persistente-speicherung)
+    5. [14.5 Monitoring und Observability](#145-monitoring-und-observability)
+       1. [14.5.1 Azure Monitoring funktioniert](#1451-azure-monitoring-funktioniert)
 
 # 1. Projektbeschreibung und Ziel
 
@@ -96,43 +108,57 @@ Die Infrastruktur wird mit Terraform als Code beschrieben. Dadurch ist sie leich
 ### 1.3.1 Container-Plattform
 
 **Ausgewählt**: Azure Container Apps
+
 **Alternativen**: Azure Kubernetes Service (AKS), Azure Container Instances (ACI)
+
 **Gründe**: Keine Cluster-Verwaltung notwendig. Automatisches Skalieren ist eingebaut. Abrechnung nur bei aktiver Nutzung.
 
 ### 1.3.2 Infrastructure as Code
 
 **Ausgewählt**: Terraform
+
 **Alternativen**: ARM Templates, Azure Bicep
+
 **Gründe**: Plattformunabhängig. Infrastruktur-Zustand wird gespeichert. Klare Syntax. Module wiederverwendbar. Grosse Community.
 
 ### 1.3.3 Web-Framework
 
 **Ausgewählt**: Python Flask
+
 **Alternativen**: Node.js Express
+
 **Gründe**: Leichtgewichtig. Schneller Einstieg. Gute Container-Kompatibilität. Grosse Bibliotheksauswahl.
 
 ### 1.3.4 Datenbank
 
 **Ausgewählt**: MySQL
+
 **Alternativen**: PostgreSQL, Azure SQL
+
 **Gründe**: Weit verbreitet. Gute Docker-Integration. Ausreichend für CRUD-Anwendungen. Open Source. Einfach lokal nutzbar.
 
 ### 1.3.5 CI/CD-System
 
 **Ausgewählt**: GitHub Actions
+
 **Alternativen**: Azure DevOps
+
 **Gründe**: Direkte GitHub-Integration. YAML-basierte Workflows. Gute Azure-Kompatibilität. Viele fertige Actions verfügbar.
 
 ### 1.3.6 Container Registry
 
 **Ausgewählt**: Azure Container Registry
+
 **Alternativen**: Docker Hub, GitHub Container Registry, AWS ECR
+
 **Gründe**: Gut in Azure integriert. Zugriff über Azure AD steuerbar. Keine eigene Infrastruktur nötig. Gute Performance.
 
 ### 1.3.7 Secrets Management
 
 **Ausgewählt**: Azure Key Vault
+
 **Alternativen**: HashiCorp Vault, Kubernetes Secrets, Umgebungsvariablen
+
 **Gründe**: Unterstützt Sicherheitsstandards. Schlüssel sind hardwaregesichert. Gute Azure-Integration. Protokollierung vorhanden. Kein eigener Betrieb notwendig.
 
 ## 1.4 Wirtschaftliche Überlegungen
@@ -142,13 +168,17 @@ Die Anwendung nutzt Dienste mit nutzungsbasierter Abrechnung. Der Betrieb ist da
 ## 1.5 Auswahl des Cloud-Anbieters
 
 **Ausgewählt**: Microsoft Azure
+
 **Alternativen**: AWS, Google Cloud
+
 **Gründe**: Es wurde bewusst ein anderer Anbieter als AWS gewählt. Azure bietet moderne Dienste wie Container Apps. Gute Integration mit Microsoft-Produkten. Azure-Kenntnisse ergänzen vorhandenes Wissen.
 
 ## 1.6 Unterschiede zwischen IaC und Konfigurationsmanagement
 
 **Ausgewählt**: Terraform
+
 **Alternativen**: Ansible
+
 **Gründe**: Terraform stellt Infrastruktur bereit („Was wird erstellt?“), während Tools wie Ansible Konfiguration übernehmen („Wie wird es eingerichtet?“). Terraform arbeitet deklarativ, erkennt Zustandsänderungen und zeigt geplante Änderungen vorab an.
 
 ---
@@ -199,6 +229,7 @@ Dies ist meine Preisberechnung für die Infrastruktur. In realität kann es 10-1
 # 3. Konfiguration
 
 ## 3.1 Secrets Management
+
 - Azure Key Vault für sensitive Daten (DB-Passwörter, ACR-Credentials)
 - Environment Variables für Container-Konfiguration
 - Trennung von Secrets und Code
@@ -269,7 +300,7 @@ Für jeden Service ist die Netzwerkkonfiguration individuell festgelegt. Das **F
 ingress {
   external_enabled = true
   target_port      = 8080
-  transport        = "auto"
+  transport        = "auto" # http
 }
 ```
 
@@ -620,3 +651,152 @@ sequenceDiagram
     Note over BE,DB: MySQL-Verbindung wird<br/>beim Bedarf hergestellt
     Note over U,FE: Browser kommuniziert nur<br/>mit dem Frontend direkt
 ```
+
+# 14. Demo / Tests
+
+## 14.1 Grundfunktionalität
+
+### 14.1.1 Todo-App Basis-Funktionen
+
+* **Ziel**: Alle Hauptfunktionen der Anwendung arbeiten korrekt
+* **Durchführung**:
+
+  1. Frontend-URL im Browser öffnen
+  2. Neuen Task "Einkaufen gehen" hinzufügen
+  3. Zweiten Task "Meeting vorbereiten" hinzufügen
+  4. Ersten Task wieder löschen
+  5. Seite neu laden (F5)
+* **Erwartetes Ergebnis**:
+
+  * Seite lädt ohne Fehler
+  * Tasks können hinzugefügt werden
+  * Tasks können gelöscht werden
+  * Nach Reload ist nur "Meeting vorbereiten" noch vorhanden
+* **Tatsächliches Ergebnis**:
+
+  * Seite lädt stabil und fehlerfrei
+  * Aufgaben lassen sich problemlos hinzufügen und löschen
+  * Nach dem Neuladen ist der zuletzt verbliebene Task korrekt erhalten geblieben
+
+![to-do-app-test-1](/src/images/to-do-app-test-1.png)
+
+![to-do-app-test-2](/src/images/to-do-app-test-2.png)
+
+![to-do-app-test-3](/src/images/to-do-app-test-3.png)
+
+## 14.2 Deployment und CI/CD
+
+### 14.2.1 Automatisches Deployment
+
+* **Ziel**: Code-Änderungen werden korrekt deployed
+* **Durchführung**:
+
+  1. Kleine Textänderung im Frontend (z.B. "Todo List" → "My Todo List")
+  2. Änderung committen und auf main branch pushen
+  3. GitHub Actions Workflow abwarten
+  4. Website nach Deployment-Abschluss aufrufen
+* **Erwartetes Ergebnis**:
+
+  * GitHub Actions läuft erfolgreich durch
+  * Änderung ist auf der Website sichtbar
+  * Bestehende Tasks bleiben erhalten
+* **Tatsächliches Ergebnis**:
+
+  * Pipeline wurde erfolgreich durchlaufen
+  * Geänderte Überschrift "My Todo List" ist sichtbar
+  * Vorhandene Aufgaben wurden beibehalten
+
+![deployment-change-test-1](/src/images/deployment-change-test-1.png)
+
+![deployment-change-test-2](/src/images/deployment-change-test-2.png)
+
+![deployment-change-test-3](/src/images/deployment-change-test-3.png)
+
+![deployment-change-test-4](/src/images/deployment-change-test-4.png)
+
+### 14.2.2 Pipeline bei Fehlern
+
+* **Ziel**: Fehlerhafte Deployments brechen die Pipeline ab
+* **Durchführung**:
+
+  1. Syntaxfehler im Code einbauen (z.B. fehlende Klammer)
+  2. Änderung pushen
+  3. GitHub Actions Status beobachten
+* **Erwartetes Ergebnis**:
+
+  * Pipeline schlägt fehl
+  * Website bleibt in funktionierender Version online
+  * Fehler ist in GitHub Actions Log erkennbar
+* **Tatsächliches Ergebnis**:
+
+  * Pipeline schlug wie erwartet fehl
+  * Keine Änderungen auf der Live-Seite
+  * Fehler war deutlich im GitHub Actions Log nachvollziehbar
+
+![deployment-fail-test-1](/src/images/deployment-fail-test-1.png)
+
+![deployment-fail-test-2](/src/images/deployment-fail-test-2.png)
+
+## 14.3 Öffentliche Erreichbarkeit
+
+### 14.3.1 Internet-Zugriff
+
+* **Ziel**: Website ist über das Internet erreichbar
+* **Durchführung**:
+
+  1. Frontend-URL aus Terraform Output verwenden
+  2. HTTPS-Verbindung prüfen
+* **Erwartetes Ergebnis**:
+
+  * Website lädt von überall ohne VPN/spezielle Konfiguration
+  * HTTPS funktioniert ohne Zertifikatswarnungen
+  * URL ist stabil und ändert sich nicht
+* **Tatsächliches Ergebnis**:
+
+  * Seite war weltweit ohne Einschränkungen erreichbar
+  * HTTPS-Verbindung war gültig und sicher
+  * URL blieb unverändert und stabil
+
+![cicd-link-test-1](/src/images/cicd-link-test-1.png)
+
+![cicd-link-test-2](/src/images/cicd-link-test-2.png)
+
+## 14.4 Datenbeständigkeit
+
+### 14.4.1 Persistente Speicherung
+
+* **Ziel**: Daten bleiben dauerhaft gespeichert
+* **Durchführung**:
+
+  1. 3-4 Tasks hinzufügen
+  2. Browser komplett schließen
+  3. Nach 10 Minuten Browser neu öffnen und URL aufrufen
+* **Erwartetes Ergebnis**:
+
+  * Alle hinzugefügten Tasks sind noch vorhanden
+  * Keine Datenverluste
+* **Tatsächliches Ergebnis**:
+
+  * Alle Aufgaben wurden nach dem erneuten Öffnen zuverlässig angezeigt
+  * Es gab keine Anzeichen für Datenverlust
+
+## 14.5 Monitoring und Observability
+
+### 14.5.1 Azure Monitoring funktioniert
+
+* **Ziel**: Infrastruktur-Monitoring erfasst echte Daten
+* **Durchführung**:
+
+  1. 10-15 verschiedene Actions im Frontend durchführen
+  2. Azure Portal → Application Insights öffnen
+  3. Request-Metriken und Logs überprüfen
+* **Erwartetes Ergebnis**:
+
+  * Request-Zahlen sind sichtbar
+  * Performance-Metriken werden aufgezeichnet
+  * Keine kritischen Errors in den Logs
+* **Tatsächliches Ergebnis**:
+
+  * Aktionen wurden vollständig im Monitoring erfasst
+  * Metriken zu Performance und Requests waren einsehbar
+  * Keine kritischen Fehler im Log erkennbar
