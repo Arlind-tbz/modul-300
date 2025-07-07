@@ -1,13 +1,13 @@
 # Lernjournal | Woche 7 - 24.06.2025
 
 ## Inhaltsverzeichnis
-- [Lernjournal | Woche 7 - 24.06.2025](#lernjournal--woche-7---24062025)
-  - [Inhaltsverzeichnis](#inhaltsverzeichnis)
-  - [Tagesziele](#tagesziele)
-  - [Erreichte Tagesziele](#erreichte-tagesziele)
-  - [Probleme \& Herausforderungen](#probleme--herausforderungen)
-  - [Genutzte \& neu entdeckte Ressourcen](#genutzte--neu-entdeckte-ressourcen)
-  - [Verweise auf Ergebnisse / Übungen / Dokumentationen](#verweise-auf-ergebnisse--übungen--dokumentationen)
+1. [Lernjournal | Woche 7 - 24.06.2025](#lernjournal--woche-7---24062025)
+   1. [Inhaltsverzeichnis](#inhaltsverzeichnis)
+   2. [Tagesziele](#tagesziele)
+   3. [Erreichte Tagesziele](#erreichte-tagesziele)
+   4. [Probleme \& Herausforderungen](#probleme--herausforderungen)
+   5. [Genutzte \& neu entdeckte Ressourcen](#genutzte--neu-entdeckte-ressourcen)
+   6. [Verweise auf Ergebnisse / Übungen / Dokumentationen](#verweise-auf-ergebnisse--übungen--dokumentationen)
 
 ## Tagesziele
 
