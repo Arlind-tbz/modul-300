@@ -402,20 +402,11 @@ resource "azurerm_monitor_diagnostic_setting" "frontend_logs" {
 
   enabled_log {
     category = "ContainerAppConsoleLogs"
-
-    retention_policy {
-      enabled = true
-      days    = 30
-    }
   }
 
   metric {
     category = "AllMetrics"
 
-    retention_policy {
-      enabled = true
-      days    = 30
-    }
   }
 }
 
@@ -426,19 +417,9 @@ resource "azurerm_monitor_diagnostic_setting" "backend_logs" {
 
   enabled_log {
     category = "ContainerAppConsoleLogs"
-
-    retention_policy {
-      enabled = true
-      days    = 30
-    }
   }
 
   metric {
     category = "AllMetrics"
-
-    retention_policy {
-      enabled = true
-      days    = 30
-    }
   }
 }
