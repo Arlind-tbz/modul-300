@@ -55,30 +55,6 @@ resource "azurerm_resource_group" "infra_rg" {
   location = var.location
 }
 
-resource "azurerm_storage_account" "mysql_storage" {
-  name                     = "${replace(var.project_name, "-", "")}mysqlsa"
-  resource_group_name      = azurerm_resource_group.infra_rg.name
-  location                 = var.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-  account_kind             = "StorageV2"
-
-  min_tls_version          = "TLS1_2"
-
-  tags = {
-    environment = "production"
-    purpose     = "mysql-data"
-  }
-}
-
-resource "azurerm_storage_share" "mysql_data" {
-  name                 = "mysql-data"
-  storage_account_id   = azurerm_storage_account.mysql_storage.id
-  quota                = 1
-
-  depends_on = [azurerm_storage_account.mysql_storage]
-}
-
 resource "azurerm_user_assigned_identity" "frontend_identity" {
   name                = "${var.project_name}-frontend-id"
   location            = var.location
@@ -91,12 +67,6 @@ resource "azurerm_user_assigned_identity" "backend_identity" {
   resource_group_name = azurerm_resource_group.infra_rg.name
 }
 
-resource "azurerm_user_assigned_identity" "db_identity" {
-  name                = "${var.project_name}-db-id"
-  location            = var.location
-  resource_group_name = azurerm_resource_group.infra_rg.name
-}
-
 resource "azurerm_container_app_environment" "env" {
   name                = "${var.project_name}-env"
   location            = var.location
@@ -105,17 +75,30 @@ resource "azurerm_container_app_environment" "env" {
   depends_on = [azurerm_resource_provider_registration.container_apps]
 }
 
-resource "azurerm_container_app_environment_storage" "mysql_storage" {
-  name                         = "mysql-data-storage"
-  container_app_environment_id = azurerm_container_app_environment.env.id
-  account_name                 = azurerm_storage_account.mysql_storage.name
-  share_name                   = azurerm_storage_share.mysql_data.name
-  access_key                   = azurerm_storage_account.mysql_storage.primary_access_key
-  access_mode                  = "ReadWrite"
+resource "azurerm_mysql_flexible_server" "mysql" {
+  name                   = "${var.project_name}-mysql"
+  resource_group_name    = azurerm_resource_group.infra_rg.name
+  location               = var.location
+  administrator_login    = data.azurerm_key_vault_secret.mysql_user.value
+  administrator_password = data.azurerm_key_vault_secret.mysql_root_password.value
+  backup_retention_days  = 7
+  sku_name              = "B_Standard_B1s"
+  version               = "8.0"
+
+  storage {
+    size_gb = 20
+  }
+}
+
+resource "azurerm_mysql_flexible_database" "database" {
+  name                = data.azurerm_key_vault_secret.mysql_database.value
+  resource_group_name = azurerm_resource_group.infra_rg.name
+  server_name         = azurerm_mysql_flexible_server.mysql.name
+  charset             = "utf8"
+  collation           = "utf8_unicode_ci"
 }
 
 resource "azurerm_container_app" "backend" {
-  depends_on                   = [azurerm_container_app.db]
   name                         = "${var.project_name}-backend"
   container_app_environment_id = azurerm_container_app_environment.env.id
   resource_group_name          = azurerm_resource_group.infra_rg.name
@@ -178,7 +161,7 @@ resource "azurerm_container_app" "backend" {
 
       env {
         name  = "MYSQL_HOST"
-        value = "${var.project_name}-db"
+        value = azurerm_mysql_flexible_server.mysql.fqdn
       }
 
       env {
@@ -196,72 +179,6 @@ resource "azurerm_container_app" "backend" {
       env {
         name        = "MYSQL_DATABASE"
         secret_name = "mysql-database"
-      }
-    }
-  }
-}
-
-resource "azurerm_container_app" "db" {
-  name                         = "${var.project_name}-db"
-  container_app_environment_id = azurerm_container_app_environment.env.id
-  resource_group_name          = azurerm_resource_group.infra_rg.name
-  revision_mode                = "Single"
-
-  identity {
-    type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.db_identity.id]
-  }
-
-  ingress {
-    external_enabled = false
-    target_port      = 3306
-    transport        = "tcp"
-
-    traffic_weight {
-      percentage      = 100
-      latest_revision = true
-    }
-  }
-
-  registry {
-    server               = data.azurerm_container_registry.acr.login_server
-    username             = data.azurerm_key_vault_secret.acr_username.value
-    password_secret_name = "acr-password"
-  }
-
-  secret {
-    name  = "acr-password"
-    value = data.azurerm_key_vault_secret.acr_password.value
-  }
-
-  secret {
-    name  = "mysql-root-password"
-    value = data.azurerm_key_vault_secret.mysql_root_password.value
-  }
-
-  template {
-    min_replicas = 1
-
-    volume {
-      name         = "mysql-data-volume"
-      storage_name = azurerm_container_app_environment_storage.mysql_storage.name
-      storage_type = "AzureFile"
-    }
-
-    container {
-      name   = "db"
-      image  = "${data.azurerm_container_registry.acr.login_server}/db:latest"
-      cpu    = 0.5
-      memory = "1Gi"
-
-      env {
-        name        = "MYSQL_ROOT_PASSWORD"
-        secret_name = "mysql-root-password"
-      }
-
-      volume_mounts {
-        name = "mysql-data-volume"
-        path = "/var/lib/mysql"
       }
     }
   }
