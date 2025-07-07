@@ -410,19 +410,24 @@ jobs:
         run: |
           echo "Attempting to discover and import backup-protected file share..."
 
+          # Build the full resource ID
           storage_account_id="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT"
 
+          # Fetch the backup item ID
           file_share_id=$(az backup item list \
             --resource-group "$RESOURCE_GROUP" \
             --vault-name "$VAULT_NAME" \
-            --workload-type AzureFileShare \
+            --workload-type "AzureFileShare" \
             --query "[?properties.sourceResourceId=='$storage_account_id' && properties.friendlyName=='$FILE_SHARE_NAME'].id" \
             --output tsv | head -n1 || true)
 
+          echo "Backup item ID: $file_share_id"
+
+          # Only import if backup item exists and not already in state
           if [[ -n "$file_share_id" ]]; then
             echo "Found backup item. Importing into Terraform..."
-            terraform import \
-              azurerm_backup_protected_file_share.mysql_data_backup "$file_share_id"
+            terraform state show azurerm_backup_protected_file_share.mysql_data_backup >/dev/null 2>&1 || \
+            terraform import azurerm_backup_protected_file_share.mysql_data_backup "$file_share_id"
           else
             echo "File share backup not found or not yet registered in the vault."
           fi
