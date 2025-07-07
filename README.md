@@ -62,7 +62,7 @@
    1. [9.1 Secrets Management](#91-secrets-management)
    2. [9.2 Netzwerksicherheit](#92-netzwerksicherheit)
    3. [9.3 Zugriffskontrolle](#93-zugriffskontrolle)
-10. [10. Backup und Restore](#10-backup-und-restore)
+10. [10. Backup](#10-backup)
 11. [11. Monitoring und Alerting](#11-monitoring-und-alerting)
        1. [11.1 Alerts \& Benachrichtigungen](#111-alerts--benachrichtigungen)
           1. [11.1.1 Action Group](#1111-action-group)
@@ -84,6 +84,8 @@
        1. [14.4.1 Persistente Speicherung](#1441-persistente-speicherung)
     5. [14.5 Monitoring – Alerts](#145-monitoring--alerts)
        1. [14.5.1 Replika-Alert wird korrekt ausgelöst](#1451-replika-alert-wird-korrekt-ausgelöst)
+    6. [14.6 Dateiwiederherstellung](#146-dateiwiederherstellung)
+       1. [14.6.1 Wiederherstellung einer Datei aus Backup](#1461-wiederherstellung-einer-datei-aus-backup)
 
 # 1. Projektbeschreibung und Ziel
 
@@ -562,9 +564,25 @@ Der Zugriff auf Ressourcen innerhalb von Azure wird über **Azure Role-Based Acc
 
 Das gesamte Berechtigungskonzept folgt dem **Least-Privilege-Prinzip**: Jede Identität – ob menschlich oder maschinell – erhält nur genau die Rechte, die für ihre Aufgabe notwendig sind. So wird das Risiko durch Fehlkonfiguration oder Missbrauch minimiert.
 
-# 10. Backup und Restore
+# 10. Backup
 
-todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo todo
+In Terraform habe ich Daily backups definiert
+
+```hcl
+resource "azurerm_recovery_services_vault" "backup_vault" {
+  ...
+}
+
+resource "azurerm_backup_policy_file_share" "file_share_policy" {
+  ...
+}
+
+resource "azurerm_backup_protected_file_share" "mysql_data_backup" {
+  ...
+}
+```
+
+Hiermit mache ich einen Backup auf meinem mysql_data Share. Diesen kann ich jeder Zeit restoren.
 
 # 11. Monitoring und Alerting
 
@@ -849,3 +867,41 @@ sequenceDiagram
 ![alert-1](/src/images/alert-1.png)
 
 ![alert-2](/src/images/alert-2.png)
+
+## 14.6 Dateiwiederherstellung
+
+### 14.6.1 Wiederherstellung einer Datei aus Backup
+
+* **Ziel**: Eine gelöschte Datei soll erfolgreich aus einem Backup wiederhergestellt werden.
+
+* **Durchführung**:
+
+  1. Datenbank im File Share speichern
+  2. Ein manuelles oder automatisches Backup durchführen
+  3. Alle Dateien löschen.
+  4. Restore-Vorgang starten
+  5. Prüfen, ob die Datei am Ursprungsort mit ursprünglichem Inhalt wiederhergestellt wurde
+
+* **Erwartetes Ergebnis**:
+
+  * Datei ist nach Wiederherstellung am korrekten Speicherort vorhanden
+  * Inhalt der Datei entspricht dem Stand vor der Löschung
+  * Zeitstempel oder Metadaten sind konsistent mit Backup-Zeitpunkt
+  * Restore-Vorgang erzeugt keine Fehlermeldungen
+
+* **Tatsächliches Ergebnis**:
+
+  * Datei wurde erfolgreich wiederhergestellt
+  * Inhalt stimmte exakt mit dem gesicherten Zustand überein
+  * Keine Fehler während des Restore-Vorgangs
+  * Alle Systemfunktionen arbeiteten anschließend wie erwartet
+
+![file-restore-test-1](/src/images/file-restore-test-1.png)
+
+![file-restore-test-2](/src/images/file-restore-test-2.png)
+
+![file-restore-test-3](/src/images/file-restore-test-3.png)
+
+![file-restore-test-4](/src/images/file-restore-test-4.png)
+
+![file-restore-test-5](/src/images/file-restore-test-5.png)
