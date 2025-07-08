@@ -729,9 +729,15 @@ sequenceDiagram
   * Aufgaben lassen sich problemlos hinzufügen und löschen
   * Nach dem Neuladen ist der zuletzt verbliebene Task korrekt erhalten geblieben
 
+- Seite lädt ohne Fehler
+
 ![to-do-app-test-1](/src/images/to-do-app-test-1.png)
 
+- Aufgaben lassen sich hinzufüge
+
 ![to-do-app-test-2](/src/images/to-do-app-test-2.png)
+
+- Aufgaben lassen sich löschen
 
 ![to-do-app-test-3](/src/images/to-do-app-test-3.png)
 
@@ -757,11 +763,19 @@ sequenceDiagram
   * Geänderte Überschrift "My Todo List" ist sichtbar
   * Vorhandene Aufgaben wurden beibehalten
 
+- Seite bevor change
+
 ![deployment-change-test-1](/src/images/deployment-change-test-1.png)
+
+- Change (Todo List zu My Todo List umbennenen) committen und auf main branch pushen
 
 ![deployment-change-test-2](/src/images/deployment-change-test-2.png)
 
+- Ci/Cd Pipeline starten
+
 ![deployment-change-test-3](/src/images/deployment-change-test-3.png)
+
+- Changes übernehmen
 
 ![deployment-change-test-4](/src/images/deployment-change-test-4.png)
 
@@ -784,7 +798,11 @@ sequenceDiagram
   * Keine Änderungen auf der Live-Seite
   * Fehler war deutlich im GitHub Actions Log nachvollziehbar
 
+- Fehler einbauen
+
 ![deployment-fail-test-1](/src/images/deployment-fail-test-1.png)
+
+- GitHub Action Fehler
 
 ![deployment-fail-test-2](/src/images/deployment-fail-test-2.png)
 
@@ -808,7 +826,11 @@ sequenceDiagram
   * HTTPS-Verbindung war gültig und sicher
   * URL blieb unverändert und stabil
 
+- GitHub Action Abwarten und Frontend-URL öffnen
+
 ![cicd-link-test-1](/src/images/cicd-link-test-1.png)
+
+- Website funktioniert
 
 ![cicd-link-test-2](/src/images/cicd-link-test-2.png)
 
@@ -864,7 +886,11 @@ sequenceDiagram
   * Nach Wiederherstellung des Dienstes wurde der Alert automatisch als „Resolved“ markiert
   * Benachrichtigung über die konfigurierte Action Group (z. B. E-Mail oder Teams) wurde erfolgreich gesendet
 
+- Alert wird ausgelöst
+
 ![alert-1](/src/images/alert-1.png)
+
+- Alert wird automatisch auf „Resolved“ gesetzt
 
 ![alert-2](/src/images/alert-2.png)
 
@@ -896,12 +922,22 @@ sequenceDiagram
   * Keine Fehler während des Restore-Vorgangs
   * Alle Systemfunktionen arbeiteten anschließend wie erwartet
 
+- Funktionierende Website mit Datenbankeinträgen
+
 ![file-restore-test-1](/src/images/file-restore-test-1.png)
+
+- DB Container stoppen
 
 ![file-restore-test-2](/src/images/file-restore-test-2.png)
 
+- Alle Dateien im File Share löschen
+
 ![file-restore-test-3](/src/images/file-restore-test-3.png)
 
+- Restore-Vorgang starten
+
 ![file-restore-test-4](/src/images/file-restore-test-4.png)
+
+- DB Container starten, und im Frontend alle Tasks wieder anzeigen
 
 ![file-restore-test-5](/src/images/file-restore-test-5.png)
