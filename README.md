@@ -62,17 +62,17 @@
    1. [9.1 Secrets Management](#91-secrets-management)
    2. [9.2 Netzwerksicherheit](#92-netzwerksicherheit)
    3. [9.3 Zugriffskontrolle](#93-zugriffskontrolle)
-10. [10. Backup](#10-backup)
-11. [11. Monitoring und Alerting](#11-monitoring-und-alerting)
-       1. [11.1 Alerts \& Benachrichtigungen](#111-alerts--benachrichtigungen)
-          1. [11.1.1 Action Group](#1111-action-group)
-          2. [11.1.2 Frontend Error Rate Alert](#1112-frontend-error-rate-alert)
-       2. [11.2 Logging](#112-logging)
-12. [12. Systemvisualisierung](#12-systemvisualisierung)
+   4. [10. Backup](#10-backup)
+   5. [11. Monitoring und Alerting](#11-monitoring-und-alerting)
+      1. [11.1 Alerts \& Benachrichtigungen](#111-alerts--benachrichtigungen)
+         1. [11.1.1 Action Group](#1111-action-group)
+         2. [11.1.2 Frontend Error Rate Alert](#1112-frontend-error-rate-alert)
+      2. [11.2 Logging](#112-logging)
+10. [12. Systemvisualisierung](#12-systemvisualisierung)
     1. [13.1 Netzwerkarchitektur](#131-netzwerkarchitektur)
     2. [13.2 CI/CD Pipeline Prozess](#132-cicd-pipeline-prozess)
     3. [13.3 Datenfluss und API-Kommunikation](#133-datenfluss-und-api-kommunikation)
-13. [14. Demo / Tests](#14-demo--tests)
+11. [14. Demo / Tests](#14-demo--tests)
     1. [14.1 Grundfunktionalität](#141-grundfunktionalität)
        1. [14.1.1 Todo-App Basis-Funktionen](#1411-todo-app-basis-funktionen)
     2. [14.2 Deployment und CI/CD](#142-deployment-und-cicd)
@@ -564,9 +564,9 @@ Der Zugriff auf Ressourcen innerhalb von Azure wird über **Azure Role-Based Acc
 
 Das gesamte Berechtigungskonzept folgt dem **Least-Privilege-Prinzip**: Jede Identität – ob menschlich oder maschinell – erhält nur genau die Rechte, die für ihre Aufgabe notwendig sind. So wird das Risiko durch Fehlkonfiguration oder Missbrauch minimiert.
 
-# 10. Backup
+## 10. Backup
 
-In Terraform habe ich Daily backups definiert
+In Terraform habe ich tägliche Backups über den Azure **Recovery Services Vault** konfiguriert:
 
 ```hcl
 resource "azurerm_recovery_services_vault" "backup_vault" {
@@ -582,25 +582,31 @@ resource "azurerm_backup_protected_file_share" "mysql_data_backup" {
 }
 ```
 
-Hiermit mache ich einen Backup auf meinem mysql_data Share. Diesen kann ich jeder Zeit restoren.
+Mit dieser Konfiguration wird täglich ein Backup meines `mysql_data` File Shares erstellt. Diese Sicherung dient zur Absicherung meiner persistenten MySQL-Daten. Im Falle eines Datenverlustes oder Problems kann das Backup jederzeit manuell über den **Recovery Services Vault im Azure-Portal** wiederhergestellt werden. Eine Wiederherstellung erfolgt **nicht automatisch**, sondern muss **bewusst initiiert und im Vault ausgewählt werden**.
 
-# 11. Monitoring und Alerting
+---
 
-Die Anwendung nutzt ein schlankes, produktionsreifes Monitoring-Konzept basierend auf Azure Monitor Metric Alerts. Auf den Einsatz von Logging-Stacks oder zusätzlichen VMs wird bewusst verzichtet. Der Fokus liegt auf **Verfügbarkeit, Performance und Alarmierung**.
+## 11. Monitoring und Alerting
+
+Die Anwendung setzt ein leichtgewichtiges, produktionsreifes Monitoring-Konzept um, das auf **Azure Monitor Metric Alerts** basiert. Es werden **keine zusätzlichen VMs oder Logging-Stacks wie ELK oder Prometheus/Grafana** betrieben. Ziel ist eine **klare und zuverlässige Überwachung** von Verfügbarkeit und Performance, sowie eine gezielte **Alarmierung bei Problemen**.
 
 ### 11.1 Alerts & Benachrichtigungen
 
 #### 11.1.1 Action Group
 
+Alle Alarme sind einer Action Group zugewiesen:
+
 * **Name:** `${var.project_name}-alerts`
 * **Empfänger:** `arlind@sulej.ch` (E-Mail)
 
+Sobald ein Alert ausgelöst wird (z. B. durch Fehler oder Ressourcenengpässe), **erhalte ich eine E-Mail** an die oben genannte Adresse. Zusätzlich werde ich auch **per E-Mail benachrichtigt, sobald sich der Zustand wieder normalisiert** (z. B. wenn ein Alarm als "resolved" markiert wird). Dadurch kann ich direkt nachvollziehen, welche Vorfälle aktiv sind und wann sie abgeschlossen wurden.
+
 #### 11.1.2 Frontend Error Rate Alert
 
-* **Ziel:** Container App Frontend
-* **Bedingung:** 5xx Fehler > 100 insgesamt
+* **Zielressource:** Container App `Frontend`
+* **Auslöser:** Mehr als 100 HTTP 5xx-Fehler
 * **Dimension:** `statusCodeCategory = "5xx"`
-* **Massnahme:** E-Mail-Benachrichtigung über Action Group
+* **Aktion:** Auslösen einer E-Mail über die Action Group
 
 ```hcl
 metric_name = "Requests"
@@ -608,6 +614,8 @@ aggregation = "Total"
 threshold   = 100
 dimension   = "5xx"
 ```
+
+Dieses Alerting stellt sicher, dass bei einer erhöhten Fehlerquote im Frontend (z. B. durch Anwendungsfehler oder Ausfälle) **unverzüglich reagiert werden kann**. Auch hier erfolgt eine automatische Benachrichtigung über das **Eintreten und das Auflösen** des Problems.
 
 ### 11.2 Logging
 
@@ -920,7 +928,7 @@ sequenceDiagram
   * Datei wurde erfolgreich wiederhergestellt
   * Inhalt stimmte exakt mit dem gesicherten Zustand überein
   * Keine Fehler während des Restore-Vorgangs
-  * Alle Systemfunktionen arbeiteten anschließend wie erwartet
+  * Alle Systemfunktionen arbeiteten anschliessend wie erwartet
 
 - Funktionierende Website mit Datenbankeinträgen
 
