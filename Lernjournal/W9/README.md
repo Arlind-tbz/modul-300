@@ -13,7 +13,7 @@
 
 - Dokumentation wieder durchlesen und fehler korrigieren.
 - Selbsteinschätzung erledigen.
-- Armin und Harun fragen ob sie meine Dokumentation mal lesen können, falls sie Zeit haben.
+- Harun fragen ob sie meine Dokumentation mal lesen können, falls sie Zeit haben.
 - Kompetenzmatrix nochmals lesen und schauen ob ich wirklich alles richtig verstanden habe.
 - Projekt vollenden und Abgeben vor 16:40 Uhr.
 
@@ -21,7 +21,7 @@
 
 - Dokumentation wieder durchlesen und fehler korrigieren.
 - Selbsteinschätzung erledigen.
-- Armin und Harun fragen ob sie meine Dokumentation mal lesen können, falls sie Zeit haben.
+- Harun fragen ob sie meine Dokumentation mal lesen können, falls sie Zeit haben.
 - Kompetenzmatrix nochmals lesen und schauen ob ich wirklich alles richtig verstanden habe.
 - Projekt vollenden und Abgeben vor 16:40 Uhr.
 
@@ -35,4 +35,5 @@ Keine
 
 ## Verweise auf Ergebnisse / Übungen / Dokumentationen
 
-(neuster CI/CD RUN)
+[GitHub Actions](https://github.com/Arlind-tbz/modul-300/actions)
+[Newest Run](https://github.com/Arlind-tbz/modul-300/actions/runs/16142069565)
